@@ -1,0 +1,161 @@
+import { SetCard } from "@/components/set/SetCard";
+import type { Set } from "@/types";
+
+const MOCK_SETS: Set[] = [
+  {
+    id: "1",
+    title: "Subterranean Movement Vol. 7",
+    description: "Deep into the underground",
+    genre: "Techno",
+    duration: 6300,
+    audioUrl: "",
+    coverUrl: null,
+    status: "READY",
+    createdAt: new Date("2024-06-01"),
+    userId: "u1",
+    user: { id: "u1", username: "rekoil", displayName: "Rekoil", avatarUrl: null, bio: null },
+    likesCount: 284,
+  },
+  {
+    id: "2",
+    title: "Fabric Live — Berlin Closing",
+    description: "4h closing set from Tresor",
+    genre: "Minimal Techno",
+    duration: 14400,
+    audioUrl: "",
+    coverUrl: null,
+    status: "READY",
+    createdAt: new Date("2024-05-28"),
+    userId: "u2",
+    user: { id: "u2", username: "djshadow", displayName: "DJ Shadow", avatarUrl: null, bio: null },
+    likesCount: 512,
+  },
+  {
+    id: "3",
+    title: "Morning Rave — Sundown Series",
+    description: "Sunrise vibes, deep house afro",
+    genre: "Afro House",
+    duration: 8100,
+    audioUrl: "",
+    coverUrl: null,
+    status: "READY",
+    createdAt: new Date("2024-05-20"),
+    userId: "u3",
+    user: { id: "u3", username: "solarflare", displayName: "Solar Flare", avatarUrl: null, bio: null },
+    likesCount: 189,
+  },
+  {
+    id: "4",
+    title: "Late Night Sessions 003",
+    description: "Dark ambient, industrial rhythms",
+    genre: "Industrial",
+    duration: 5400,
+    audioUrl: "",
+    coverUrl: null,
+    status: "READY",
+    createdAt: new Date("2024-05-15"),
+    userId: "u4",
+    user: { id: "u4", username: "noxvoid", displayName: "Nox Void", avatarUrl: null, bio: null },
+    likesCount: 97,
+  },
+  {
+    id: "5",
+    title: "Dub Techno Dimensions",
+    description: "Echoes from the warehouse",
+    genre: "Dub Techno",
+    duration: 7200,
+    audioUrl: "",
+    coverUrl: null,
+    status: "READY",
+    createdAt: new Date("2024-05-10"),
+    userId: "u5",
+    user: { id: "u5", username: "echomatrix", displayName: "Echo Matrix", avatarUrl: null, bio: null },
+    likesCount: 341,
+  },
+  {
+    id: "6",
+    title: "Acid Rain — Live at Rex Club",
+    description: "303 madness, acid house classics",
+    genre: "Acid House",
+    duration: 4800,
+    audioUrl: "",
+    coverUrl: null,
+    status: "READY",
+    createdAt: new Date("2024-05-05"),
+    userId: "u6",
+    user: { id: "u6", username: "acid303", displayName: "Acid 303", avatarUrl: null, bio: null },
+    likesCount: 456,
+  },
+  {
+    id: "7",
+    title: "Golden Hour — Rooftop Sessions",
+    description: "Balearic beats at sunset",
+    genre: "Balearic",
+    duration: 9000,
+    audioUrl: "",
+    coverUrl: null,
+    status: "READY",
+    createdAt: new Date("2024-04-28"),
+    userId: "u7",
+    user: { id: "u7", username: "balearicbliss", displayName: "Balearic Bliss", avatarUrl: null, bio: null },
+    likesCount: 223,
+  },
+  {
+    id: "8",
+    title: "Hypnotic Patterns — Marathon",
+    description: "6h hypnotic techno journey",
+    genre: "Hypnotic Techno",
+    duration: 21600,
+    audioUrl: "",
+    coverUrl: null,
+    status: "READY",
+    createdAt: new Date("2024-04-20"),
+    userId: "u8",
+    user: { id: "u8", username: "voidwalker", displayName: "Void Walker", avatarUrl: null, bio: null },
+    likesCount: 678,
+  },
+  {
+    id: "9",
+    title: "Somewhere Between",
+    description: "Ambient, kosmische musik",
+    genre: "Ambient",
+    duration: 10800,
+    audioUrl: "",
+    coverUrl: null,
+    status: "READY",
+    createdAt: new Date("2024-04-15"),
+    userId: "u9",
+    user: { id: "u9", username: "cosmika", displayName: "Cosmika", avatarUrl: null, bio: null },
+    likesCount: 132,
+  },
+  {
+    id: "10",
+    title: "Raw Cuts — Warehouse Night",
+    description: "No frills hard techno",
+    genre: "Hard Techno",
+    duration: 7500,
+    audioUrl: "",
+    coverUrl: null,
+    status: "READY",
+    createdAt: new Date("2024-04-10"),
+    userId: "u10",
+    user: { id: "u10", username: "rawcutter", displayName: "Raw Cutter", avatarUrl: null, bio: null },
+    likesCount: 389,
+  },
+];
+
+export default function FeedPage() {
+  return (
+    <div className="py-8 space-y-12">
+      <section>
+        <h1 className="text-2xl font-bold text-zinc-100 tracking-tight mb-1">New Arrivals</h1>
+        <p className="text-sm text-zinc-500 mb-6">Fresh sets from the community</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {MOCK_SETS.map((set) => (
+            <SetCard key={set.id} set={set} />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
