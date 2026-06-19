@@ -19,7 +19,6 @@ export async function POST(req: Request) {
   }
 
   const body = await req.text();
-  const payload = JSON.parse(body);
 
   let event: WebhookEvent;
   try {
