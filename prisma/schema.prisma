@@ -18,6 +18,7 @@ model User {
 
   sets      Set[]
   likes     Like[]
+  reactions Reaction[]
   followers Follow[] @relation("FollowingRelation")
   following Follow[] @relation("FollowerRelation")
 }
@@ -27,16 +28,18 @@ model Set {
   title       String
   description String
   genre       String
-  duration    Int // seconds
+  mood        Mood?
+  duration    Int
   audioUrl    String
   coverUrl    String?
   status      SetStatus @default(PENDING)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  likes  Like[]
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes     Like[]
+  reactions Reaction[]
 }
 
 enum SetStatus {
@@ -44,6 +47,17 @@ enum SetStatus {
   PROCESSING
   READY
   FAILED
+}
+
+enum Mood {
+  HYPNOTIC
+  EUPHORIC
+  TRIBAL
+  FLOATING
+  DARK
+  MELANCHOLIC
+  RAW
+  COSMIC
 }
 
 model Like {
@@ -66,4 +80,16 @@ model Follow {
   following User @relation("FollowingRelation", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
+}
+
+model Reaction {
+  userId    String
+  setId     String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  set  Set  @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  @@id([userId, setId, emoji])
 }

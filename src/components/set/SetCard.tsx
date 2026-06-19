@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Play, Heart, Clock } from "lucide-react";
+import { Play, Clock } from "lucide-react";
 import { usePlayerStore } from "@/store/player";
 import { formatDuration } from "@/lib/utils";
+import { LikeButton } from "@/components/set/LikeButton";
 import type { Set } from "@/types";
 
 interface SetCardProps {
@@ -105,12 +106,11 @@ export function SetCard({ set }: SetCardProps) {
               {set.user.displayName ?? set.user.username}
             </Link>
           </div>
-          <button
-            aria-label={`Like ${set.title}`}
-            className="shrink-0 p-1.5 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-md text-zinc-600 hover:text-red-400 transition-colors duration-150"
-          >
-            <Heart className="w-4 h-4" aria-hidden="true" />
-          </button>
+          <LikeButton
+            setId={set.id}
+            initialLiked={set.isLiked ?? false}
+            initialCount={set.likesCount}
+          />
         </div>
 
         <div className="mt-2 flex items-center justify-between">

@@ -1,8 +1,19 @@
+export type Mood =
+  | "HYPNOTIC"
+  | "EUPHORIC"
+  | "TRIBAL"
+  | "FLOATING"
+  | "DARK"
+  | "MELANCHOLIC"
+  | "RAW"
+  | "COSMIC";
+
 export interface Set {
   id: string;
   title: string;
   description: string;
   genre: string;
+  mood: Mood | null;
   duration: number;
   audioUrl: string;
   coverUrl: string | null;
@@ -11,6 +22,8 @@ export interface Set {
   userId: string;
   user: User;
   likesCount: number;
+  isLiked?: boolean;
+  reactions?: ReactionCount[];
 }
 
 export interface User {
@@ -19,4 +32,13 @@ export interface User {
   displayName: string | null;
   avatarUrl: string | null;
   bio: string | null;
+  followersCount?: number;
+  followingCount?: number;
+  isFollowing?: boolean;
+}
+
+export interface ReactionCount {
+  emoji: string;
+  count: number;
+  isReacted: boolean;
 }
