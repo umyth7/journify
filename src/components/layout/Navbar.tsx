@@ -15,10 +15,10 @@ export function Navbar() {
         <Link
           href="/"
           className="flex items-center gap-2 text-zinc-100 hover:text-violet-400 transition-colors duration-150 shrink-0"
-          aria-label="Journey — home"
+          aria-label="Senssetify — home"
         >
           <Radio className="w-5 h-5 text-violet-500" aria-hidden="true" />
-          <span className="font-semibold tracking-tight">Journey</span>
+          <span className="font-semibold tracking-tight">Senssetify</span>
         </Link>
 
         {/* Search — desktop */}

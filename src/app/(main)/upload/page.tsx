@@ -155,7 +155,7 @@ export default function UploadPage() {
     <div className="max-w-2xl mx-auto py-4 animate-fade-in">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">Upload a Set</h1>
-        <p className="text-sm text-zinc-500 mt-1">Share your live set with the Journey community. Min 40 min, max 3 hours.</p>
+        <p className="text-sm text-zinc-500 mt-1">Share your live set with the Senssetify community. Min 40 min, max 3 hours.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">

@@ -15,7 +15,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Journey — Music is a Journey",
+  title: "Senssetify — Music is a Journey",
   description: "Discover and share long-form live sets. Deep listening for the long road.",
 };
 

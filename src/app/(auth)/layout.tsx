@@ -18,10 +18,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <Link
         href="/"
         className="flex items-center gap-2 mb-10 text-zinc-100 hover:text-violet-400 transition-colors duration-200"
-        aria-label="Journey — go to home"
+        aria-label="Senssetify — go to home"
       >
         <Radio className="w-6 h-6 text-violet-500" aria-hidden="true" />
-        <span className="text-xl font-semibold tracking-tight">Journey</span>
+        <span className="text-xl font-semibold tracking-tight">Senssetify</span>
       </Link>
 
       {/* Glassmorphism card */}
