@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Radio, Search, Upload } from "lucide-react";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Radio, Search, Upload, User } from "lucide-react";
+import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 
 export function Navbar() {
   const router = useRouter();
+  const { user } = useUser();
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -70,7 +71,15 @@ export function Navbar() {
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 rounded-full",
                 },
               }}
-            />
+            >
+              <UserButton.MenuItems>
+                <UserButton.Link
+                  label="Profilim"
+                  labelIcon={<User className="w-4 h-4" />}
+                  href={`/profile/${user?.username}`}
+                />
+              </UserButton.MenuItems>
+            </UserButton>
           </SignedIn>
 
           <SignedOut>
