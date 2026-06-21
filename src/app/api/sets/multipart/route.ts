@@ -116,7 +116,6 @@ export async function POST(req: Request) {
         create: {
           id: userId,
           username: clerkUser.username ?? userId,
-          email: clerkUser.emailAddresses[0]?.emailAddress ?? "",
         },
       });
     }
