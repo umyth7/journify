@@ -41,7 +41,7 @@ function probeAudio(url: string): Promise<ProbeResult> {
       if (!audio) return reject(new Error("No audio stream found"));
       resolve({
         codec: audio.codec_name ?? "unknown",
-        bitrate: parseInt(audio.bit_rate ?? meta.format.bit_rate ?? "0"),
+        bitrate: parseInt(String(audio.bit_rate ?? meta.format.bit_rate ?? "0")),
         duration: parseFloat(String(meta.format.duration ?? "0")),
       });
     });
