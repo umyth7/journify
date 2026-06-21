@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import {
   CreateMultipartUploadCommand,
   UploadPartCommand,
@@ -106,6 +106,20 @@ export async function POST(req: Request) {
     );
 
     const audioUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
+
+    // Ensure user exists in DB (webhook may not have fired yet)
+    const clerkUser = await currentUser();
+    if (clerkUser) {
+      await db.user.upsert({
+        where: { id: userId },
+        update: {},
+        create: {
+          id: userId,
+          username: clerkUser.username ?? userId,
+          email: clerkUser.emailAddresses[0]?.emailAddress ?? "",
+        },
+      });
+    }
 
     const VALID_MOODS = ["HYPNOTIC","EUPHORIC","TRIBAL","FLOATING","DARK","MELANCHOLIC","RAW","COSMIC"];
     const workerUrl = process.env.TRANSCODING_WORKER_URL;
