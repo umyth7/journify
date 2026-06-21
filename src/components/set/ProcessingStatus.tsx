@@ -28,14 +28,15 @@ export function ProcessingOrDone({ setId, onReset, onView }: Props) {
 
     poll(); // immediate first check
     const interval = setInterval(async () => {
-      await poll();
-      const res = await fetch(`/api/sets/${setId}/status`).catch(() => null);
-      if (!res) return;
-      const data = await res.json();
-      if (data.status === "READY" || data.status === "FAILED") {
-        clearInterval(interval);
+      try {
+        const res = await fetch(`/api/sets/${setId}/status`);
+        if (!res.ok) return;
+        const data = await res.json();
         setSetStatus(data.status);
-      }
+        if (data.status === "READY" || data.status === "FAILED") {
+          clearInterval(interval);
+        }
+      } catch {}
     }, 4000);
 
     return () => clearInterval(interval);

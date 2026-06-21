@@ -11,7 +11,7 @@ export async function GET(req: Request) {
 
   const mood = searchParams.get("mood") as Mood | null;
   const sort = searchParams.get("sort") ?? "new"; // "new" | "trending"
-  const limit = Math.min(Number(searchParams.get("limit") ?? "20"), 50);
+  const limit = Math.min(parseInt(searchParams.get("limit") ?? "20", 10) || 20, 50);
   const cursor = searchParams.get("cursor") ?? undefined;
 
   const sets = await db.set.findMany({

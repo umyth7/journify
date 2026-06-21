@@ -11,7 +11,7 @@ import { r2, R2_BUCKET } from "@/lib/r2";
 import { db } from "@/lib/db";
 
 const PART_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
 const MIN_DURATION = 2400; // 40 minutes in seconds
 const MAX_DURATION = 10800; // 3 hours in seconds
 const ALLOWED_AUDIO_TYPES = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/flac", "audio/aac", "audio/ogg"];

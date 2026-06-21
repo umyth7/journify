@@ -146,20 +146,22 @@ export async function processTranscodeJob(setId: string, originalKey: string): P
     console.log(`[transcode] Uploading to R2...`);
     const newAudioUrl = await uploadToR2(outTmp, outKey);
 
-    // 5. Delete original from R2
-    await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: originalKey }));
-    console.log(`[transcode] Deleted original from R2`);
-
-    // 6. Update DB
+    // 5. Update DB first (so set is never in a broken state)
     await db.set.update({
       where: { id: setId },
       data: { status: "READY", audioUrl: newAudioUrl },
     });
     console.log(`[transcode] Set ${setId} → READY`);
 
+    // 6. Delete original from R2 (after DB is safe)
+    await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: originalKey }));
+    console.log(`[transcode] Deleted original from R2`);
+
   } catch (err) {
     console.error(`[transcode] Failed for set ${setId}:`, err);
-    await db.set.update({ where: { id: setId }, data: { status: "FAILED" } }).catch(() => {});
+    await db.set.update({ where: { id: setId }, data: { status: "FAILED" } }).catch((dbErr) => {
+      console.error(`[transcode] Failed to update status to FAILED for set ${setId}:`, dbErr);
+    });
     throw err;
   } finally {
     if (srcTmp && fs.existsSync(srcTmp)) fs.unlinkSync(srcTmp);

@@ -40,6 +40,9 @@ export async function PATCH(req: Request) {
 
   const { avatarUrl } = await req.json() as { avatarUrl: string };
   if (!avatarUrl) return NextResponse.json({ error: "Missing avatarUrl" }, { status: 400 });
+  if (!avatarUrl.startsWith(process.env.R2_PUBLIC_URL!)) {
+    return NextResponse.json({ error: "Invalid avatarUrl" }, { status: 400 });
+  }
 
   await db.user.update({ where: { id: userId }, data: { avatarUrl } });
   return NextResponse.json({ ok: true });

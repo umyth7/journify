@@ -41,3 +41,11 @@ next-env.d.ts
 # local dev / test utilities
 /test-shots/
 /test-screenshots.mjs
+
+# worker build artifacts
+/worker/node_modules/
+/worker/dist/
+/worker/*.tsbuildinfo
+
+# local dev notes (not for repo)
+/docs/pending-security-notes.md
