@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { SetCard } from "@/components/set/SetCard";
 import { FollowButton } from "@/components/profile/FollowButton";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import type { Set } from "@/types";
 
 export default async function ProfilePage({ params }: { params: { username: string } }) {
@@ -61,12 +62,22 @@ export default async function ProfilePage({ params }: { params: { username: stri
     <div className="py-10 space-y-10">
       {/* Profile header */}
       <div className="flex items-start gap-6">
-        <div className="shrink-0 w-20 h-20 rounded-2xl overflow-hidden bg-zinc-800 shadow-xl shadow-black/40">
-          {user.avatarUrl ? (
-            <Image src={user.avatarUrl} alt={displayName} width={80} height={80} className="object-cover" />
+        <div className="shrink-0">
+          {isOwnProfile ? (
+            <AvatarUpload
+              currentUrl={user.avatarUrl}
+              username={user.username}
+              onSuccess={() => {}}
+            />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-zinc-300 bg-gradient-to-br from-violet-700 to-zinc-800">
-              {displayName[0]?.toUpperCase()}
+            <div className="w-20 h-20 rounded-full overflow-hidden bg-zinc-800 shadow-xl shadow-black/40">
+              {user.avatarUrl ? (
+                <Image src={user.avatarUrl} alt={displayName} width={80} height={80} className="object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-zinc-300 bg-gradient-to-br from-violet-700 to-zinc-800">
+                  {displayName[0]?.toUpperCase()}
+                </div>
+              )}
             </div>
           )}
         </div>

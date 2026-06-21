@@ -3,11 +3,12 @@
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Upload, Music, ImagePlus, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, Music, ImagePlus, X, CheckCircle2, AlertCircle, Loader2, Disc3, Sparkles, Globe2, Waves, Moon, CloudDrizzle, Zap, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDuration } from "@/lib/utils";
 import { useUpload } from "@/hooks/useUpload";
+import { ProcessingOrDone } from "@/components/set/ProcessingStatus";
 
 const GENRES = [
   "Techno", "Minimal Techno", "Dub Techno", "Hard Techno", "Hypnotic Techno",
@@ -15,6 +16,30 @@ const GENRES = [
   "Ambient", "Balearic", "Industrial", "Drone", "Experimental",
   "Drum & Bass", "Jungle", "Breaks", "Other",
 ];
+
+const MOODS = [
+  { id: "HYPNOTIC",    label: "Hypnotic",    tagline: "Time suspends",  Icon: Disc3,        color: "violet" },
+  { id: "EUPHORIC",    label: "Euphoric",    tagline: "Chest opens",    Icon: Sparkles,     color: "amber"  },
+  { id: "TRIBAL",      label: "Tribal",      tagline: "Cells respond",  Icon: Globe2,       color: "orange" },
+  { id: "FLOATING",    label: "Floating",    tagline: "Gravity fades",  Icon: Waves,        color: "sky"    },
+  { id: "DARK",        label: "Dark",        tagline: "Underground",    Icon: Moon,         color: "zinc"   },
+  { id: "MELANCHOLIC", label: "Melancholic", tagline: "Bittersweet",    Icon: CloudDrizzle, color: "slate"  },
+  { id: "RAW",         label: "Raw",         tagline: "Pure energy",    Icon: Zap,          color: "red"    },
+  { id: "COSMIC",      label: "Cosmic",      tagline: "Universe vast",  Icon: Rocket,       color: "purple" },
+] as const;
+
+type MoodId = typeof MOODS[number]["id"];
+
+const MOOD_ACTIVE: Record<string, string> = {
+  violet: "border-violet-500 bg-violet-900/40 text-violet-300",
+  amber:  "border-amber-500  bg-amber-900/40  text-amber-300",
+  orange: "border-orange-500 bg-orange-900/40 text-orange-300",
+  sky:    "border-sky-500    bg-sky-900/40    text-sky-300",
+  zinc:   "border-zinc-400   bg-zinc-800/80   text-zinc-200",
+  slate:  "border-slate-400  bg-slate-800/60  text-slate-300",
+  red:    "border-red-500    bg-red-900/40    text-red-300",
+  purple: "border-purple-500 bg-purple-900/40 text-purple-300",
+};
 
 const MIN_DURATION = 2400; // 40 min
 const MAX_DURATION = 10800; // 3 hours
@@ -55,6 +80,7 @@ export default function UploadPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [genre, setGenre] = useState("");
+  const [mood, setMood] = useState<MoodId | "">("");
 
   const audioInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -123,7 +149,7 @@ export default function UploadPage() {
       coverUrl = await uploadCover(coverFile) ?? undefined;
     }
 
-    await upload(audioFile, audioDuration, { title, description, genre, coverUrl });
+    await upload(audioFile, audioDuration, { title, description, genre, mood: mood || undefined, coverUrl });
   };
 
   const isUploading = status === "uploading" || status === "completing";
@@ -131,23 +157,7 @@ export default function UploadPage() {
 
   // ---- SUCCESS STATE ----
   if (status === "done" && setId) {
-    return (
-      <div className="max-w-lg mx-auto mt-20 text-center space-y-6 animate-fade-in">
-        <div className="flex justify-center">
-          <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-          </div>
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Set uploaded!</h1>
-          <p className="text-zinc-400 mt-2">Transcoding will begin shortly. Your set will be live once processing completes.</p>
-        </div>
-        <div className="flex gap-3 justify-center">
-          <Button variant="outline" onClick={reset}>Upload another</Button>
-          <Button onClick={() => router.push(`/sets/${setId}`)}>View set</Button>
-        </div>
-      </div>
-    );
+    return <ProcessingOrDone setId={setId} onReset={reset} onView={() => router.push(`/sets/${setId}`)} />;
   }
 
   // ---- MAIN FORM ----
@@ -270,6 +280,44 @@ export default function UploadPage() {
                 <option key={g} value={g} className="bg-zinc-900">{g}</option>
               ))}
             </select>
+          </div>
+
+          {/* Mood seçimi */}
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-zinc-200">
+              Mood <span className="text-zinc-600 font-normal">(optional)</span>
+            </p>
+            <div
+              role="radiogroup"
+              aria-label="Set mood"
+              className="grid grid-cols-4 gap-2"
+            >
+              {MOODS.map(({ id, label, tagline, Icon, color }) => {
+                const isActive = mood === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="radio"
+                    aria-checked={isActive}
+                    onClick={() => setMood(isActive ? "" : id)}
+                    className={`
+                      flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-center
+                      transition-all duration-200 cursor-pointer
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500
+                      ${isActive
+                        ? MOOD_ACTIVE[color]
+                        : "border-zinc-700/50 bg-zinc-800/40 text-zinc-400 hover:border-zinc-600 hover:bg-zinc-800/70 hover:text-zinc-300"
+                      }
+                    `}
+                  >
+                    <Icon className="w-4 h-4" aria-hidden="true" />
+                    <span className="text-xs font-medium leading-none">{label}</span>
+                    <span className="text-[10px] leading-none text-zinc-500">{tagline}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </section>
 

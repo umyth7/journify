@@ -1,10 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Radio, Search, Upload } from "lucide-react";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export function Navbar() {
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const q = (e.currentTarget.elements.namedItem("q") as HTMLInputElement).value.trim();
+    if (q) router.push(`/search?q=${encodeURIComponent(q)}`);
+    else router.push("/search");
+  };
+
   return (
     <header className="fixed top-0 inset-x-0 z-50 h-14 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-md">
       <nav
@@ -22,25 +32,27 @@ export function Navbar() {
         </Link>
 
         {/* Search — desktop */}
-        <div className="hidden md:flex items-center gap-2 flex-1 max-w-sm bg-zinc-800/60 border border-zinc-700 rounded-lg px-3 py-2 focus-within:border-violet-500 focus-within:ring-1 focus-within:ring-violet-500 transition-all duration-150">
+        <form onSubmit={handleSearch} className="hidden md:flex items-center gap-2 flex-1 max-w-sm bg-zinc-800/60 border border-zinc-700 rounded-lg px-3 py-2 focus-within:border-violet-500 focus-within:ring-1 focus-within:ring-violet-500 transition-all duration-150">
           <Search className="w-4 h-4 text-zinc-500 shrink-0" aria-hidden="true" />
           <input
+            name="q"
             type="search"
             placeholder="Search sets, artists…"
             className="bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 outline-none w-full"
             aria-label="Search sets and artists"
           />
-        </div>
+        </form>
 
         {/* Right actions */}
         <div className="flex items-center gap-1.5 shrink-0">
           {/* Mobile search */}
-          <button
+          <Link
+            href="/search"
             className="md:hidden w-11 h-11 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
             aria-label="Search"
           >
             <Search className="w-5 h-5" aria-hidden="true" />
-          </button>
+          </Link>
 
           <SignedIn>
             <Link

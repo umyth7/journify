@@ -10,6 +10,7 @@ export interface UploadMetadata {
   title: string;
   description: string;
   genre: string;
+  mood?: string;
   coverUrl?: string;
 }
 

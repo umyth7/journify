@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { SetCard } from "@/components/set/SetCard";
 import { MoodFilter, type MoodId } from "@/components/set/MoodFilter";
 import type { Set } from "@/types";
@@ -33,34 +33,45 @@ const MOOD_THEMES: Record<Exclude<MoodId, null> | "default", MoodTheme> = {
 
 const TRANSITION = "500ms cubic-bezier(0.4, 0, 0.2, 1)";
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
-const MOCK_SETS: Set[] = [
-  { id: "1",  title: "Subterranean Movement Vol. 7", description: "Deep into the underground",    genre: "Techno",         mood: "HYPNOTIC",   duration: 6300,  audioUrl: "", coverUrl: null, status: "READY", createdAt: new Date("2024-06-01"), userId: "u1",  user: { id: "u1",  username: "rekoil",       displayName: "Rekoil",        avatarUrl: null, bio: null }, likesCount: 284, isLiked: false },
-  { id: "2",  title: "Fabric Live — Berlin Closing", description: "4h closing set from Tresor",   genre: "Minimal Techno", mood: "DARK",        duration: 14400, audioUrl: "", coverUrl: null, status: "READY", createdAt: new Date("2024-05-28"), userId: "u2",  user: { id: "u2",  username: "djshadow",     displayName: "DJ Shadow",     avatarUrl: null, bio: null }, likesCount: 512, isLiked: false },
-  { id: "3",  title: "Morning Rave — Sundown Series",description: "Sunrise vibes, deep house afro",genre: "Afro House",    mood: "TRIBAL",     duration: 8100,  audioUrl: "", coverUrl: null, status: "READY", createdAt: new Date("2024-05-20"), userId: "u3",  user: { id: "u3",  username: "solarflare",   displayName: "Solar Flare",   avatarUrl: null, bio: null }, likesCount: 189, isLiked: false },
-  { id: "4",  title: "Late Night Sessions 003",       description: "Dark ambient, industrial",     genre: "Industrial",     mood: "DARK",        duration: 5400,  audioUrl: "", coverUrl: null, status: "READY", createdAt: new Date("2024-05-15"), userId: "u4",  user: { id: "u4",  username: "noxvoid",      displayName: "Nox Void",      avatarUrl: null, bio: null }, likesCount: 97,  isLiked: false },
-  { id: "5",  title: "Dub Techno Dimensions",         description: "Echoes from the warehouse",   genre: "Dub Techno",     mood: "FLOATING",   duration: 7200,  audioUrl: "", coverUrl: null, status: "READY", createdAt: new Date("2024-05-10"), userId: "u5",  user: { id: "u5",  username: "echomatrix",   displayName: "Echo Matrix",   avatarUrl: null, bio: null }, likesCount: 341, isLiked: false },
-  { id: "6",  title: "Acid Rain — Live at Rex Club",  description: "303 madness, acid classics",  genre: "Acid House",     mood: "RAW",        duration: 4800,  audioUrl: "", coverUrl: null, status: "READY", createdAt: new Date("2024-05-05"), userId: "u6",  user: { id: "u6",  username: "acid303",      displayName: "Acid 303",      avatarUrl: null, bio: null }, likesCount: 456, isLiked: false },
-  { id: "7",  title: "Golden Hour — Rooftop Sessions",description: "Balearic beats at sunset",    genre: "Balearic",       mood: "EUPHORIC",   duration: 9000,  audioUrl: "", coverUrl: null, status: "READY", createdAt: new Date("2024-04-28"), userId: "u7",  user: { id: "u7",  username: "balearicbliss",displayName: "Balearic Bliss",avatarUrl: null, bio: null }, likesCount: 223, isLiked: false },
-  { id: "8",  title: "Hypnotic Patterns — Marathon",  description: "6h hypnotic techno journey",  genre: "Hypnotic Techno",mood: "HYPNOTIC",   duration: 21600, audioUrl: "", coverUrl: null, status: "READY", createdAt: new Date("2024-04-20"), userId: "u8",  user: { id: "u8",  username: "voidwalker",   displayName: "Void Walker",   avatarUrl: null, bio: null }, likesCount: 678, isLiked: false },
-  { id: "9",  title: "Somewhere Between",             description: "Ambient, kosmische musik",    genre: "Ambient",        mood: "FLOATING",   duration: 10800, audioUrl: "", coverUrl: null, status: "READY", createdAt: new Date("2024-04-15"), userId: "u9",  user: { id: "u9",  username: "cosmika",      displayName: "Cosmika",       avatarUrl: null, bio: null }, likesCount: 132, isLiked: false },
-  { id: "10", title: "Raw Cuts — Warehouse Night",    description: "No frills hard techno",       genre: "Hard Techno",    mood: "RAW",        duration: 7500,  audioUrl: "", coverUrl: null, status: "READY", createdAt: new Date("2024-04-10"), userId: "u10", user: { id: "u10", username: "rawcutter",    displayName: "Raw Cutter",    avatarUrl: null, bio: null }, likesCount: 389, isLiked: false },
-];
-
 const MOOD_LABELS: Record<string, string> = {
   HYPNOTIC: "Hypnotic", EUPHORIC: "Euphoric", TRIBAL: "Tribal",
   FLOATING: "Floating", DARK: "Dark", MELANCHOLIC: "Melancholic",
   RAW: "Raw", COSMIC: "Cosmic",
 };
 
+type SortMode = "new" | "trending";
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function FeedPage() {
   const [activeMood, setActiveMood] = useState<MoodId>(null);
+  const [sort, setSort] = useState<SortMode>("new");
+  const [sets, setSets] = useState<Set[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const theme = activeMood ? MOOD_THEMES[activeMood] : MOOD_THEMES.default;
-  const filteredSets = activeMood
-    ? MOCK_SETS.filter((s) => s.mood === activeMood)
-    : MOCK_SETS;
+
+  const fetchSets = useCallback(async (mood: MoodId, sortMode: SortMode) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ sort: sortMode });
+      if (mood) params.set("mood", mood);
+      const res = await fetch(`/api/sets?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSets(data.sets ?? []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSets(activeMood, sort);
+  }, [activeMood, sort, fetchSets]);
+
+  const handleMoodChange = (mood: MoodId) => {
+    setActiveMood(mood);
+  };
 
   return (
     <div className="py-6 space-y-10">
@@ -118,49 +129,61 @@ export default function FeedPage() {
 
       {/* ── Mood Filter ───────────────────────────────────────────────────────── */}
       <section aria-label="Browse by mood">
-        <MoodFilter value={activeMood} onChange={setActiveMood} />
+        <MoodFilter value={activeMood} onChange={handleMoodChange} />
       </section>
 
       {/* ── Feed ─────────────────────────────────────────────────────────────── */}
       <section>
-        <div className="flex items-baseline justify-between mb-5">
-          <div>
-            <h2
-              className="text-xl font-bold font-syne tracking-tight"
-              style={{
-                color: activeMood ? theme.textColor : "#e4e4e7",
-                transition: `color ${TRANSITION}`,
-              }}
-            >
-              {activeMood ? `${MOOD_LABELS[activeMood]} Sets` : "New Arrivals"}
-            </h2>
-            <p className="text-sm text-zinc-500 mt-0.5">
-              {activeMood
-                ? `Filtered by mood · ${filteredSets.length} set${filteredSets.length !== 1 ? "s" : ""}`
-                : "Fresh sets from the community"}
-            </p>
+        <div className="flex items-center justify-between mb-5 gap-4">
+          {/* Sort tabs */}
+          <div className="flex items-center gap-1 bg-zinc-900/60 border border-zinc-800 rounded-xl p-1">
+            {(["new", "trending"] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setSort(s)}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 min-h-[36px] ${
+                  sort === s
+                    ? "text-zinc-100 shadow-sm"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+                style={sort === s ? { backgroundColor: theme.accentBg || "rgba(109,40,217,0.15)", color: theme.labelColor } : {}}
+              >
+                {s === "new" ? "New Arrivals" : "Trending"}
+              </button>
+            ))}
           </div>
 
-          {activeMood && (
-            <button
-              onClick={() => setActiveMood(null)}
-              className="text-xs px-3 py-1.5 rounded-lg min-h-[44px] border transition-opacity duration-150 hover:opacity-80 active:opacity-60"
-              style={{
-                color: theme.labelColor,
-                borderColor: `${theme.glowColor}55`,
-                backgroundColor: theme.accentBg,
-              }}
-            >
-              Clear filter
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-zinc-500">
+              {loading ? "Loading…" : activeMood ? `${sets.length} set${sets.length !== 1 ? "s" : ""}` : ""}
+            </p>
+            {activeMood && (
+              <button
+                onClick={() => handleMoodChange(null)}
+                className="text-xs px-3 py-1.5 rounded-lg min-h-[36px] border transition-opacity duration-150 hover:opacity-80 active:opacity-60"
+                style={{
+                  color: theme.labelColor,
+                  borderColor: `${theme.glowColor}55`,
+                  backgroundColor: theme.accentBg,
+                }}
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
         </div>
 
-        {filteredSets.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-2xl bg-zinc-800/50 animate-pulse" />
+            ))}
+          </div>
+        ) : sets.length === 0 ? (
           <div className="text-center py-20 space-y-2">
             <p className="text-zinc-500 text-sm">No sets found for this mood yet.</p>
             <button
-              onClick={() => setActiveMood(null)}
+              onClick={() => handleMoodChange(null)}
               className="text-xs transition-colors duration-150 hover:opacity-80 min-h-[44px] px-4"
               style={{ color: theme.labelColor }}
             >
@@ -169,7 +192,7 @@ export default function FeedPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-fade-in">
-            {filteredSets.map((set) => (
+            {sets.map((set) => (
               <SetCard key={set.id} set={set} />
             ))}
           </div>

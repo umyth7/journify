@@ -3,12 +3,44 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { Clock, Music2 } from "lucide-react";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { formatDuration } from "@/lib/utils";
 import { PlayButton } from "@/components/set/PlayButton";
 import { LikeButton } from "@/components/set/LikeButton";
 import { EmojiReactions } from "@/components/set/EmojiReactions";
 import { FollowButton } from "@/components/profile/FollowButton";
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const set = await db.set.findUnique({
+    where: { id: params.id },
+    select: { title: true, description: true, coverUrl: true, user: { select: { displayName: true, username: true } } },
+  });
+
+  if (!set) return { title: "Set not found — Journey" };
+
+  const artist = set.user.displayName ?? set.user.username;
+  const title = `${set.title} by ${artist}`;
+  const description = set.description.slice(0, 160);
+  const image = set.coverUrl ?? `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/og-default.png`;
+
+  return {
+    title: `${title} — Journey`,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: image, width: 1200, height: 630, alt: title }],
+      type: "music.song",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
+  };
+}
 
 const MOOD_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
   HYPNOTIC:    { label: "Hypnotic",    emoji: "🌀", color: "text-violet-400 bg-violet-500/10 border-violet-500/30" },

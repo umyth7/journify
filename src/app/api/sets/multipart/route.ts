@@ -78,7 +78,7 @@ export async function POST(req: Request) {
       uploadId: string;
       key: string;
       parts: { partNumber: number; etag: string }[];
-      metadata: { title: string; description: string; genre: string; coverUrl?: string };
+      metadata: { title: string; description: string; genre: string; mood?: string; coverUrl?: string };
       duration: number;
     };
 
@@ -107,20 +107,37 @@ export async function POST(req: Request) {
 
     const audioUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
 
+    const VALID_MOODS = ["HYPNOTIC","EUPHORIC","TRIBAL","FLOATING","DARK","MELANCHOLIC","RAW","COSMIC"];
+    const workerUrl = process.env.TRANSCODING_WORKER_URL;
+    const hasWorker = !!workerUrl;
+
     const set = await db.set.create({
       data: {
         title: metadata.title.trim(),
         description: metadata.description.trim(),
         genre: metadata.genre,
+        mood: metadata.mood && VALID_MOODS.includes(metadata.mood) ? (metadata.mood as import("@prisma/client").Mood) : null,
         duration: Math.floor(duration),
         audioUrl,
         coverUrl: metadata.coverUrl ?? null,
-        status: "READY",
+        status: hasWorker ? "PROCESSING" : "READY",
         userId,
       },
     });
 
-    return NextResponse.json({ setId: set.id });
+    // Fire-and-forget to transcoding worker (if configured)
+    if (hasWorker) {
+      fetch(`${workerUrl}/transcode`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-worker-secret": process.env.WORKER_SECRET ?? "",
+        },
+        body: JSON.stringify({ setId: set.id, key }),
+      }).catch((err) => console.error("[worker trigger] failed:", err));
+    }
+
+    return NextResponse.json({ setId: set.id, status: set.status });
   }
 
   // --- ABORT ---

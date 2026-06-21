@@ -22,6 +22,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [code, setCode] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,11 +42,15 @@ export default function RegisterPage() {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         window.location.href = "/";
+      } else if (result.status === "missing_requirements") {
+        // Email verification required — send OTP and show verification step
+        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+        setVerifying(true);
       } else {
         setError(
           lang === "tr"
-            ? "Kayıt tamamlanamadı. Email kutunu kontrol et ve doğrulama adımını tamamla."
-            : "Registration incomplete. Check your email to complete verification."
+            ? "Kayıt tamamlanamadı. Tekrar dene."
+            : "Registration incomplete. Please try again."
         );
       }
     } catch (err: unknown) {
@@ -53,6 +59,27 @@ export default function RegisterPage() {
         clerkErr.errors?.[0]?.longMessage ??
           (lang === "tr" ? "Kayıt başarısız. Tekrar dene." : "Sign up failed. Please try again.")
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!isLoaded) return;
+    setLoading(true);
+    setError("");
+    try {
+      const result = await signUp.attemptEmailAddressVerification({ code });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        window.location.href = "/";
+      } else {
+        setError(lang === "tr" ? "Doğrulama tamamlanamadı." : "Verification incomplete.");
+      }
+    } catch (err: unknown) {
+      const clerkErr = err as { errors?: { longMessage?: string }[] };
+      setError(clerkErr.errors?.[0]?.longMessage ?? (lang === "tr" ? "Geçersiz kod." : "Invalid code."));
     } finally {
       setLoading(false);
     }
@@ -72,6 +99,55 @@ export default function RegisterPage() {
       desc: t.listenerDesc,
     },
   ];
+
+  if (verifying) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-xl font-semibold text-zinc-100">
+            {lang === "tr" ? "Email doğrulama" : "Verify your email"}
+          </h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            {lang === "tr"
+              ? `${email} adresine gönderilen kodu gir.`
+              : `Enter the code sent to ${email}.`}
+          </p>
+        </div>
+
+        <form onSubmit={handleVerify} className="space-y-4" noValidate>
+          <Input
+            id="code"
+            type="text"
+            label={lang === "tr" ? "Doğrulama kodu" : "Verification code"}
+            placeholder="123456"
+            autoComplete="one-time-code"
+            inputMode="numeric"
+            required
+            value={code}
+            onChange={(e) => setCode(e.target.value.trim())}
+          />
+
+          {error && (
+            <p role="alert" aria-live="polite" className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+
+          <Button type="submit" size="lg" loading={loading} className="w-full">
+            {loading ? (lang === "tr" ? "Doğrulanıyor…" : "Verifying…") : (lang === "tr" ? "Doğrula" : "Verify")}
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => { setVerifying(false); setCode(""); setError(""); }}
+            className="w-full text-xs text-zinc-500 hover:text-zinc-300 transition-colors py-2"
+          >
+            {lang === "tr" ? "← Geri dön" : "← Go back"}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
