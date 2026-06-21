@@ -10,6 +10,7 @@ import { PlayButton } from "@/components/set/PlayButton";
 import { LikeButton } from "@/components/set/LikeButton";
 import { EmojiReactions } from "@/components/set/EmojiReactions";
 import { FollowButton } from "@/components/profile/FollowButton";
+import { Comments } from "@/components/set/Comments";
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const set = await db.set.findUnique({
@@ -182,6 +183,9 @@ export default async function SetDetailPage({ params }: { params: { id: string }
           <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">{set.description}</p>
         </div>
       )}
+
+      {/* Comments */}
+      <Comments setId={set.id} />
     </div>
   );
 }

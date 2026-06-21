@@ -63,23 +63,26 @@ export function Navbar() {
               <Upload className="w-4 h-4" aria-hidden="true" />
               Upload
             </Link>
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: "w-9 h-9",
-                  userButtonTrigger:
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 rounded-full",
-                },
-              }}
-            >
-              <UserButton.MenuItems>
-                <UserButton.Link
-                  label="Profilim"
-                  labelIcon={<User className="w-4 h-4" />}
-                  href={`/profile/${user?.username}`}
-                />
-              </UserButton.MenuItems>
-            </UserButton>
+            <div className="relative group">
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "w-9 h-9",
+                    userButtonTrigger:
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 rounded-full",
+                  },
+                }}
+              >
+                <UserButton.MenuItems>
+                  <UserButton.Link
+                    label="Profilim"
+                    labelIcon={<User className="w-4 h-4" />}
+                    href={`/profile/${user?.username}`}
+                  />
+                </UserButton.MenuItems>
+              </UserButton>
+              <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none" />
+            </div>
           </SignedIn>
 
           <SignedOut>

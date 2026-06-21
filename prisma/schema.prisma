@@ -22,6 +22,7 @@ model User {
   sets      Set[]
   likes     Like[]
   reactions Reaction[]
+  comments  Comment[]
   followers Follow[] @relation("FollowingRelation")
   following Follow[] @relation("FollowerRelation")
 }
@@ -43,6 +44,7 @@ model Set {
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   likes     Like[]
   reactions Reaction[]
+  comments  Comment[]
 }
 
 enum SetStatus {
@@ -95,4 +97,17 @@ model Reaction {
   set  Set  @relation(fields: [setId], references: [id], onDelete: Cascade)
 
   @@id([userId, setId, emoji])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  createdAt DateTime @default(now())
+
+  userId String
+  setId  String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  set    Set  @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  @@index([setId, createdAt])
 }
