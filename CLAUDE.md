@@ -43,14 +43,39 @@ src/
 Claude source/journey klasorü içerisinde her belgeyi yazabilir izin almasına gerek yok
 
 ## Geliştirme Planı (Fazlar)
-- **Phase 1 (2 hafta):** Temel altyapı — DB, Auth, R2, FFmpeg worker
-- **Phase 2 (2.5 hafta):** Upload & Audio core — player, streaming, metadata formu
-- **Phase 3 (2 hafta):** Profil & Sosyal — like, follow, paylaşım
-- **Phase 4 (1.5 hafta):** Ana sayfa & Keşif — feed, arama, trending
-- **Phase 5 (2 hafta):** Güvenlik, optimizasyon, test
-- **Phase 6 (2 hafta):** Launch — beta, email bildirimleri, analytics
+
+| Faz | Süre | Konu | Durum |
+|-----|------|------|-------|
+| Phase 1 | 2 hafta | Temel altyapı — DB, Auth, R2, FFmpeg worker | ✅ Tamamlandı |
+| Phase 2 | 2.5 hafta | Upload & Audio core — player, streaming, metadata formu | ✅ Tamamlandı |
+| Phase 3 | 2 hafta | Profil & Sosyal — like, follow, paylaşım | ✅ Tamamlandı |
+| Phase 4 | 1.5 hafta | Ana sayfa & Keşif — feed, arama, trending | ✅ Tamamlandı |
+| Phase 5 | 2 hafta | Güvenlik, optimizasyon, test | ✅ Tamamlandı |
+| Phase 6 | 2 hafta | Launch — beta, email bildirimleri, analytics | ❌ Başlanmadı |
 
 Toplam: ~14 hafta (haftada 4 gün × 8 saat = 32 saat/hafta)
+
+### Phase 3 — Tamamlananlar
+- ✅ OG meta tag'leri (`/sets/[id]` — `generateMetadata` ile OpenGraph + Twitter Card)
+- ✅ Profil edit sayfası `/profile/edit` — displayName, bio, instagram, soundcloud, website
+- ✅ Prisma şemasına `instagram`, `soundcloud`, `website` alanları eklendi
+- ✅ `PATCH /api/users/me` endpoint
+- ✅ Profil sayfasında sosyal link'ler görüntüleniyor
+
+### Phase 4 — Tamamlananlar
+- ✅ Feed cursor-based infinite scroll (IntersectionObserver, 200px rootMargin)
+- ✅ Trending algoritması: `orderBy [likes._count desc, createdAt desc]` — çalışıyor
+- ✅ Arama: set + artist, debounced, Suspense boundary
+
+### Phase 5 — Tamamlananlar
+- ✅ Rate limiting — DB tabanlı: kullanıcı başına saatte max 10 upload (initiate endpoint)
+- ✅ Input sanitization — title (120 char), description (2000), genre (80), bio (300), displayName (60), sosyal linkler (200) max-length + trim + boş kontrol
+- ✅ Next.js Image remote domains — R2 (`*.r2.dev`, `senssetify.com`), Clerk CDN whitelist
+
+### Phase 6 — Yapılacaklar
+- [ ] Beta email listesi
+- [ ] Analytics (Plausible veya Umami)
+- [ ] Email bildirimleri (follow, yeni set)
 
 ## Temel Özellikler
 - Set yükleme: min 40 dk, max 3 saat, sadece audio; chunked multipart upload
@@ -95,14 +120,54 @@ Genre etiketleri yerine **duygusal durumlar** ön plana çıkarılır.
 | Cosmic | `#8b5cf6` | Soft Purple |
 
 ### Uygulama Notu
-- `Set` modeline `mood` alanı eklenecek (`enum` — Prisma şemasında)
-- Feed ve arama sayfasında mood filtresi olarak görünecek
-- Upload formuna genre yerine/yanına mood seçimi eklenecek
+- ✅ `Set` modeline `mood` alanı eklendi (`enum` — Prisma şemasında)
+- ✅ Feed sayfasında mood filtresi çalışıyor (ambient glow + renk geçişleriyle)
+- ✅ Upload formuna mood seçimi eklendi
+- ✅ Arama sayfasında mood filtresi mevcut
 - Detaylı analiz: `docs/mood-category-analysis.md`
 
 ---
 
 ## Geliştirme Günlüğü
+
+### 2026-06-21 — Phase 3 + 4 + 5 Tamamlandı
+
+#### ✅ Tamamlananlar
+- **Profil edit** — `/profile/edit` sayfası; displayName, bio, instagram, soundcloud, website alanları; `PATCH /api/users/me`; profil sayfasında sosyal linkler
+- **Prisma migration** — `instagram`, `soundcloud`, `website` alanları User modeline eklendi (`20260621000000_add_social_links`)
+- **Feed infinite scroll** — IntersectionObserver + cursor-based pagination; `loadingMore` skeleton
+- **Next.js Image domains** — `next.config.mjs` güncellendi: `*.r2.dev`, `senssetify.com`, Clerk CDN
+- **Rate limiting** — Upload initiate endpoint'inde DB tabanlı: son 1 saatte max 10 set başlatma (429 yanıtı)
+- **Input sanitization** — Tüm API endpoint'lerinde trim + max-length + zorunlu alan kontrolleri
+- **TypeScript** — sıfır hata (`npx tsc --noEmit` temiz)
+
+#### ⚠️ Railway Migration Notu
+`prisma/migrations/20260621000000_add_social_links/migration.sql` Railway PostgreSQL'e uygulanmalı:
+```
+npx prisma migrate deploy
+```
+(Railway ortamında `DATABASE_URL` set edilmiş olmalı — Vercel'e push sonrası Railway'de terminal aç veya `railway run npx prisma migrate deploy`)
+
+---
+
+### 2026-06-21 — Bug Fix: Worker ffprobe + API FK hatası
+
+#### ✅ Tamamlananlar
+- **Worker (Railway):** `ffmpeg-static` + `@ffprobe-installer/ffprobe` paketleri eklendi — Railway container'ında sistem FFmpeg gerektirmeden binary path otomatik set ediliyor. `Cannot find ffprobe` hatası giderildi.
+- **API (`/api/sets/multipart`):** `currentUser()` null döndüğünde user upsert'in atlanması sorunu giderildi. `if (clerkUser)` guard kaldırıldı, upsert artık her zaman çalışıyor — `db.set.create` P2003 FK hatası almıyor.
+- **Upload cover cropper:** `react-easy-crop` ile 1:1 kare kırpma modalı eklendi (bir önceki oturumda tamamlandı).
+
+#### 📊 Mevcut Production Durumu
+- Ana sayfa (`/`): ✅ DB bağlı, mood filtresi + new/trending sort çalışıyor
+- `/sets/[id]`: ✅ DB bağlı, like/reaction/follow/player
+- `/profile/[username]`: ✅ DB bağlı, avatar upload, set grid
+- `/upload`: ✅ Multipart (2GB), cover cropper, mood seçimi, worker'a transcoding tetikleniyor
+- `/search`: ✅ DB bağlı, set + artist arama, debounced
+- `/login` + `/register`: ✅ Glassmorphism UI, TR/EN, rol seçici
+- Worker (Railway): ✅ Deploy edildi, ffprobe fix push'landı — yeniden deploy bekleniyor
+- Vercel production: ✅ READY (`www.senssetify.com`)
+
+---
 
 ### 2026-06-19 02:20 — Phase 3 Sosyal Özellikler + Auth UI
 
@@ -130,11 +195,11 @@ Genre etiketleri yerine **duygusal durumlar** ön plana çıkarılır.
 - `useLanguage` hook: localStorage'da dil tercihi persist ediliyor
 - **Mail yok** — Kayıt akışında email doğrulama şimdilik devre dışı (Clerk ayarından kapatılacak)
 
-#### 📊 Durum
-- Ana sayfa (`/`): ✅ Çalışıyor (mock data)
-- `/sets/[id]` ve `/profile/[username]`: ✅ DB bağlı, 404 (henüz kayıt yok — Clerk webhook'tan user gelince çalışacak)
+#### 📊 Durum (2026-06-19 itibarıyla)
+- Ana sayfa (`/`): ✅ Çalışıyor (o an mock data — 2026-06-21'de DB bağlandı)
+- `/sets/[id]` ve `/profile/[username]`: ✅ DB bağlı
 - `/login` ve `/register`: ✅ Çalışıyor (glassmorphism UI, TR/EN, rol seçici)
-- Vercel production: ✅ READY (`journify-j3zsgp8sr-journalred.vercel.app`)
+- Vercel production: ✅ READY → domain `www.senssetify.com` olarak güncellendi
 
 ---
 

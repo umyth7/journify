@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { SetCard } from "@/components/set/SetCard";
 import { MoodFilter, type MoodId } from "@/components/set/MoodFilter";
 import type { Set } from "@/types";
@@ -42,23 +42,57 @@ export default function FeedPage() {
   const [sort, setSort] = useState<SortMode>("new");
   const [sets, setSets] = useState<Set[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const theme = activeMood ? MOOD_THEMES[activeMood] : MOOD_THEMES.default;
 
   const fetchSets = useCallback(async (mood: MoodId, sortMode: SortMode) => {
     setLoading(true);
+    setNextCursor(null);
     try {
-      const params = new URLSearchParams({ sort: sortMode });
+      const params = new URLSearchParams({ sort: sortMode, limit: "20" });
       if (mood) params.set("mood", mood);
       const res = await fetch(`/api/sets?${params}`);
       if (res.ok) {
         const data = await res.json();
         setSets(data.sets ?? []);
+        setNextCursor(data.nextCursor ?? null);
       }
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const params = new URLSearchParams({ sort, limit: "20", cursor: nextCursor });
+      if (activeMood) params.set("mood", activeMood);
+      const res = await fetch(`/api/sets?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSets((prev) => [...prev, ...(data.sets ?? [])]);
+        setNextCursor(data.nextCursor ?? null);
+      }
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [nextCursor, loadingMore, sort, activeMood]);
+
+  // IntersectionObserver — load more when sentinel enters viewport
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMore(); },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   useEffect(() => {
     fetchSets(activeMood, sort);
@@ -182,11 +216,24 @@ export default function FeedPage() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-fade-in">
-            {sets.map((set) => (
-              <SetCard key={set.id} set={set} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-fade-in">
+              {sets.map((set) => (
+                <SetCard key={set.id} set={set} />
+              ))}
+            </div>
+
+            {/* Infinite scroll sentinel */}
+            <div ref={sentinelRef} className="h-1" />
+
+            {loadingMore && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="aspect-square rounded-2xl bg-zinc-800/50 animate-pulse" />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </section>
     </div>

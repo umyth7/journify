@@ -1,6 +1,8 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
+import { Settings, AtSign, Music, Globe } from "lucide-react";
 import { db } from "@/lib/db";
 import { SetCard } from "@/components/set/SetCard";
 import { FollowButton } from "@/components/profile/FollowButton";
@@ -67,7 +69,6 @@ export default async function ProfilePage({ params }: { params: { username: stri
             <AvatarUpload
               currentUrl={user.avatarUrl}
               username={user.username}
-              onSuccess={() => {}}
             />
           ) : (
             <div className="w-20 h-20 rounded-full overflow-hidden bg-zinc-800 shadow-xl shadow-black/40">
@@ -88,7 +89,15 @@ export default async function ProfilePage({ params }: { params: { username: stri
               <h1 className="text-xl font-bold text-zinc-100">{displayName}</h1>
               <p className="text-sm text-zinc-500">@{user.username}</p>
             </div>
-            {!isOwnProfile && (
+            {isOwnProfile ? (
+              <Link
+                href="/profile/edit"
+                className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:border-zinc-600 transition-colors min-h-[36px]"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                Düzenle
+              </Link>
+            ) : (
               <FollowButton
                 username={user.username}
                 initialFollowing={!!followRecord}
@@ -98,6 +107,42 @@ export default async function ProfilePage({ params }: { params: { username: stri
           </div>
 
           {user.bio && <p className="text-sm text-zinc-400 leading-relaxed max-w-lg">{user.bio}</p>}
+
+          {/* Social links */}
+          {(user.instagram || user.soundcloud || user.website) && (
+            <div className="flex flex-wrap items-center gap-3">
+              {user.instagram && (
+                <a
+                  href={user.instagram.startsWith("http") ? user.instagram : `https://${user.instagram}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-violet-400 transition-colors"
+                >
+                  <AtSign className="w-3.5 h-3.5" />
+                  {user.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "")}
+                </a>
+              )}
+              {user.soundcloud && (
+                <a
+                  href={user.soundcloud.startsWith("http") ? user.soundcloud : `https://${user.soundcloud}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-violet-400 transition-colors"
+                >
+                  <Music className="w-3.5 h-3.5" />
+                  SoundCloud
+                </a>
+              )}
+              {user.website && (
+                <a
+                  href={user.website.startsWith("http") ? user.website : `https://${user.website}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-violet-400 transition-colors"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  {user.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}
+                </a>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center gap-5 text-sm">
             <span>

@@ -45,15 +45,15 @@ export function ProcessingOrDone({ setId, onReset, onView }: Props) {
           </div>
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Sıkıştırılıyor…</h1>
+          <h1 className="text-2xl font-bold text-zinc-100">Setiniz İnceleniyor</h1>
           <p className="text-zinc-400 mt-2 text-sm leading-relaxed">
-            Dosyan MP3 128kbps formatına dönüştürülüyor.<br />
-            Bu işlem dosya boyutuna göre 1-5 dakika sürebilir.
+            Setinizi optimize edip yayına hazırlıyoruz.<br />
+            Bu işlem dosya boyutuna göre 1–5 dakika sürebilir.
           </p>
         </div>
         <div className="flex items-center justify-center gap-2 text-xs text-zinc-600">
           <Loader2 className="w-3 h-3 animate-spin" />
-          İşlem devam ediyor, sayfayı kapatabilirsin
+          Sayfayı kapatsan da işlem devam eder
         </div>
       </div>
     );
@@ -85,12 +85,12 @@ export function ProcessingOrDone({ setId, onReset, onView }: Props) {
         </div>
       </div>
       <div>
-        <h1 className="text-2xl font-bold text-zinc-100">Set hazır!</h1>
-        <p className="text-zinc-400 mt-2 text-sm">Sıkıştırma tamamlandı. Setini dinleyebilirsin.</p>
+        <h1 className="text-2xl font-bold text-zinc-100">Setiniz Yayında! 🎉</h1>
+        <p className="text-zinc-400 mt-2 text-sm">İnceleme tamamlandı. Toplulukla paylaşıldı.</p>
       </div>
       <div className="flex gap-3 justify-center">
         <Button variant="outline" onClick={onReset}>Başka set yükle</Button>
-        <Button onClick={onView}>Seti gör</Button>
+        <Button onClick={onView}>Seti görüntüle</Button>
       </div>
     </div>
   );

@@ -16,6 +16,10 @@ const MIN_DURATION = 2400; // 40 minutes in seconds
 const MAX_DURATION = 10800; // 3 hours in seconds
 const ALLOWED_AUDIO_TYPES = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/flac", "audio/aac", "audio/ogg"];
 
+// DB-based rate limit: max 10 uploads initiated per user per hour
+const UPLOAD_RATE_LIMIT = 10;
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) {
@@ -39,6 +43,18 @@ export async function POST(req: Request) {
     }
     if (fileSize > MAX_FILE_SIZE) {
       return NextResponse.json({ error: "File too large. Maximum 2GB." }, { status: 400 });
+    }
+
+    // Rate limit: check how many sets this user started in the last hour
+    const windowStart = new Date(Date.now() - RATE_WINDOW_MS);
+    const recentCount = await db.set.count({
+      where: { userId, createdAt: { gte: windowStart } },
+    });
+    if (recentCount >= UPLOAD_RATE_LIMIT) {
+      return NextResponse.json(
+        { error: "Upload limit reached. Maximum 10 uploads per hour." },
+        { status: 429 }
+      );
     }
 
     const ext = filename.split(".").pop() ?? "mp3";
@@ -119,26 +135,33 @@ export async function POST(req: Request) {
       },
     });
 
+    // Sanitize metadata inputs
+    const title = metadata.title?.trim().slice(0, 120);
+    const description = metadata.description?.trim().slice(0, 2000);
+    const genre = metadata.genre?.trim().slice(0, 80);
+    if (!title || !description || !genre) {
+      return NextResponse.json({ error: "Title, description and genre are required." }, { status: 400 });
+    }
+
     const VALID_MOODS = ["HYPNOTIC","EUPHORIC","TRIBAL","FLOATING","DARK","MELANCHOLIC","RAW","COSMIC"];
     const workerUrl = process.env.TRANSCODING_WORKER_URL;
-    const hasWorker = !!workerUrl;
 
     const set = await db.set.create({
       data: {
-        title: metadata.title.trim(),
-        description: metadata.description.trim(),
-        genre: metadata.genre,
+        title,
+        description,
+        genre,
         mood: metadata.mood && VALID_MOODS.includes(metadata.mood) ? (metadata.mood as import("@prisma/client").Mood) : null,
         duration: Math.floor(duration),
         audioUrl,
         coverUrl: metadata.coverUrl ?? null,
-        status: hasWorker ? "PROCESSING" : "READY",
+        status: "PROCESSING",
         userId,
       },
     });
 
-    // Fire-and-forget to transcoding worker (if configured)
-    if (hasWorker) {
+    if (workerUrl) {
+      // Fire-and-forget to transcoding worker
       fetch(`${workerUrl}/transcode`, {
         method: "POST",
         headers: {
@@ -147,9 +170,12 @@ export async function POST(req: Request) {
         },
         body: JSON.stringify({ setId: set.id, key }),
       }).catch((err) => console.error("[worker trigger] failed:", err));
+    } else {
+      // No worker configured — mark ready immediately so set is playable
+      await db.set.update({ where: { id: set.id }, data: { status: "READY" } });
     }
 
-    return NextResponse.json({ setId: set.id, status: set.status });
+    return NextResponse.json({ setId: set.id, status: workerUrl ? "PROCESSING" : "READY" });
   }
 
   // --- ABORT ---

@@ -7,7 +7,7 @@ import { Camera, Loader2 } from "lucide-react";
 interface AvatarUploadProps {
   currentUrl: string | null;
   username: string;
-  onSuccess: (newUrl: string) => void;
+  onSuccess?: (newUrl: string) => void;
 }
 
 export function AvatarUpload({ currentUrl, username, onSuccess }: AvatarUploadProps) {
@@ -53,7 +53,7 @@ export function AvatarUpload({ currentUrl, username, onSuccess }: AvatarUploadPr
         body: JSON.stringify({ avatarUrl: publicUrl }),
       });
 
-      onSuccess(publicUrl);
+      onSuccess?.(publicUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
       setPreview(null);
