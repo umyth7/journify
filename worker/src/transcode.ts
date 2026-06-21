@@ -108,29 +108,25 @@ async function uploadToR2(filePath: string, key: string): Promise<string> {
 }
 
 export async function processTranscodeJob(setId: string, originalKey: string): Promise<void> {
-  const publicUrl = `${R2_PUBLIC_URL}/${originalKey}`;
   console.log(`[transcode] Starting job for set ${setId}`);
 
   let srcTmp: string | null = null;
   let outTmp: string | null = null;
 
   try {
-    // 1. Probe source
-    console.log(`[transcode] Probing ${publicUrl}`);
-    const probe = await probeAudio(publicUrl);
+    // 1. Download source first, probe locally (avoids R2 public URL dependency)
+    console.log(`[transcode] Downloading source...`);
+    srcTmp = await downloadToTemp(originalKey);
+    console.log(`[transcode] Downloaded to ${srcTmp}`);
+
+    const probe = await probeAudio(srcTmp);
     console.log(`[transcode] Source: codec=${probe.codec} bitrate=${Math.round(probe.bitrate / 1000)}kbps duration=${Math.round(probe.duration)}s`);
 
     if (!shouldTranscode(probe)) {
-      // Source is already a low-bitrate MP3 — just mark as READY
       console.log(`[transcode] Skipping transcode (already optimal)`);
       await db.set.update({ where: { id: setId }, data: { status: "READY" } });
       return;
     }
-
-    // 2. Download source to temp
-    console.log(`[transcode] Downloading source...`);
-    srcTmp = await downloadToTemp(originalKey);
-    console.log(`[transcode] Downloaded to ${srcTmp}`);
 
     // 3. Transcode to MP3 128kbps
     const outKey = originalKey.replace(/\.[^.]+$/, "") + "-128k.mp3";
