@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Pause, Play, Volume2, AlertCircle } from "lucide-react";
+import { Pause, Play, Volume2, VolumeX, AlertCircle } from "lucide-react";
 import { usePlayerStore } from "@/store/player";
 import { formatDuration } from "@/lib/utils";
 
@@ -11,6 +11,8 @@ export function AudioPlayer() {
     usePlayerStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioError, setAudioError] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
 
   // Load new track
   useEffect(() => {
@@ -30,6 +32,25 @@ export function AudioPlayer() {
     if (isPlaying) audio.play().catch(() => {});
     else audio.pause();
   }, [isPlaying]);
+
+  const handleVolumeClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = Math.max(0, Math.min((e.clientX - rect.left) / rect.width, 1));
+    audio.volume = pct;
+    audio.muted = false;
+    setVolume(pct);
+    setMuted(false);
+  };
+
+  const toggleMute = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const next = !muted;
+    audio.muted = next;
+    setMuted(next);
+  };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const audio = audioRef.current;
@@ -135,11 +156,35 @@ export function AudioPlayer() {
           )}
 
           {/* Volume — desktop only */}
-          <div className="hidden lg:flex items-center gap-2 w-28 shrink-0" aria-label="Volume">
-            <Volume2 className="w-4 h-4 text-zinc-500 shrink-0" aria-hidden="true" />
-            <div className="flex-1 h-1 bg-zinc-700 rounded-full">
-              <div className="h-full w-2/3 bg-zinc-400 rounded-full" />
+          <div className="hidden lg:flex items-center gap-2 w-32 shrink-0" aria-label="Volume">
+            <button
+              onClick={toggleMute}
+              className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0"
+              aria-label={muted ? "Sesi aç" : "Sesi kapat"}
+            >
+              {muted || volume === 0 ? (
+                <VolumeX className="w-4 h-4" aria-hidden="true" />
+              ) : (
+                <Volume2 className="w-4 h-4" aria-hidden="true" />
+              )}
+            </button>
+            <div
+              className="flex-1 h-1 bg-zinc-700 rounded-full cursor-pointer group relative"
+              onClick={handleVolumeClick}
+              role="slider"
+              aria-label="Ses seviyesi"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={muted ? 0 : Math.round(volume * 100)}
+            >
+              <div
+                className="h-full bg-zinc-400 group-hover:bg-violet-400 rounded-full transition-colors"
+                style={{ width: `${muted ? 0 : volume * 100}%` }}
+              />
             </div>
+            <span className="text-xs text-zinc-500 tabular-nums w-7 shrink-0">
+              {muted ? "0%" : `${Math.round(volume * 100)}%`}
+            </span>
           </div>
         </div>
       </div>
