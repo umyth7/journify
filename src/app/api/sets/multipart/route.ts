@@ -108,17 +108,16 @@ export async function POST(req: Request) {
     const audioUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
 
     // Ensure user exists in DB (webhook may not have fired yet)
+    // Always upsert — currentUser() can be null if Clerk API is slow, but userId is always valid
     const clerkUser = await currentUser();
-    if (clerkUser) {
-      await db.user.upsert({
-        where: { id: userId },
-        update: {},
-        create: {
-          id: userId,
-          username: clerkUser.username ?? userId,
-        },
-      });
-    }
+    await db.user.upsert({
+      where: { id: userId },
+      update: {},
+      create: {
+        id: userId,
+        username: clerkUser?.username ?? userId,
+      },
+    });
 
     const VALID_MOODS = ["HYPNOTIC","EUPHORIC","TRIBAL","FLOATING","DARK","MELANCHOLIC","RAW","COSMIC"];
     const workerUrl = process.env.TRANSCODING_WORKER_URL;

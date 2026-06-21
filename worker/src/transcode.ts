@@ -1,4 +1,6 @@
 import ffmpeg from "fluent-ffmpeg";
+import ffmpegStatic from "ffmpeg-static";
+import ffprobeInstaller from "@ffprobe-installer/ffprobe";
 import { S3Client, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { PrismaClient } from "@prisma/client";
@@ -6,6 +8,10 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { Readable } from "stream";
+
+// Use bundled binaries so Railway doesn't need system FFmpeg
+if (ffmpegStatic) ffmpeg.setFfmpegPath(ffmpegStatic);
+ffmpeg.setFfprobePath(ffprobeInstaller.path);
 
 const r2 = new S3Client({
   region: "auto",
@@ -154,9 +160,13 @@ export async function processTranscodeJob(setId: string, originalKey: string): P
     console.log(`[transcode] Deleted original from R2`);
 
   } catch (err) {
-    console.error(`[transcode] Failed for set ${setId}:`, err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`\x1b[31m[transcode] FAILED set=${setId}\x1b[0m`);
+    console.error(`\x1b[31m[transcode] key=${originalKey} | bucket=${BUCKET} | endpoint=${process.env.R2_ENDPOINT}\x1b[0m`);
+    console.error(`\x1b[31m[transcode] error: ${msg}\x1b[0m`);
+    console.error(err);
     await db.set.update({ where: { id: setId }, data: { status: "FAILED" } }).catch((dbErr) => {
-      console.error(`[transcode] Failed to update status to FAILED for set ${setId}:`, dbErr);
+      console.error(`\x1b[31m[transcode] DB status update also failed:\x1b[0m`, dbErr);
     });
     throw err;
   } finally {
