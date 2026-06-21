@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Pause, Play, Volume2, VolumeX, AlertCircle } from "lucide-react";
+import { Pause, Play, Volume1, Volume2, VolumeX, AlertCircle } from "lucide-react";
 import { usePlayerStore } from "@/store/player";
 import { formatDuration } from "@/lib/utils";
 
@@ -13,8 +13,9 @@ export function AudioPlayer() {
   const [audioError, setAudioError] = useState(false);
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
+  const seekDragging = useRef(false);
+  const volDragging = useRef(false);
 
-  // Load new track
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !track) return;
@@ -25,7 +26,6 @@ export function AudioPlayer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track?.id]);
 
-  // Sync play/pause
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -33,16 +33,50 @@ export function AudioPlayer() {
     else audio.pause();
   }, [isPlaying]);
 
-  const handleVolumeClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const getPct = (e: React.PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    return Math.max(0, Math.min((e.clientX - rect.left) / rect.width, 1));
+  };
+
+  // Seek handlers
+  const applySeek = (pct: number) => {
+    const audio = audioRef.current;
+    if (!audio || !duration) return;
+    audio.currentTime = pct * duration;
+    setCurrentTime(audio.currentTime);
+  };
+
+  const onSeekDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    seekDragging.current = true;
+    applySeek(getPct(e));
+  };
+  const onSeekMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!seekDragging.current) return;
+    applySeek(getPct(e));
+  };
+  const onSeekUp = () => { seekDragging.current = false; };
+
+  // Volume handlers
+  const applyVolume = (pct: number) => {
     const audio = audioRef.current;
     if (!audio) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pct = Math.max(0, Math.min((e.clientX - rect.left) / rect.width, 1));
     audio.volume = pct;
     audio.muted = false;
     setVolume(pct);
     setMuted(false);
   };
+
+  const onVolDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    volDragging.current = true;
+    applyVolume(getPct(e));
+  };
+  const onVolMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!volDragging.current) return;
+    applyVolume(getPct(e));
+  };
+  const onVolUp = () => { volDragging.current = false; };
 
   const toggleMute = () => {
     const audio = audioRef.current;
@@ -52,16 +86,14 @@ export function AudioPlayer() {
     setMuted(next);
   };
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    const audio = audioRef.current;
-    if (!audio || !duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pct = Math.max(0, Math.min((e.clientX - rect.left) / rect.width, 1));
-    audio.currentTime = pct * duration;
-    setCurrentTime(audio.currentTime);
-  };
-
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const effectiveVolume = muted ? 0 : volume;
+
+  const VolumeIcon = effectiveVolume === 0
+    ? VolumeX
+    : effectiveVolume < 0.5
+    ? Volume1
+    : Volume2;
 
   if (!track) return null;
 
@@ -125,22 +157,24 @@ export function AudioPlayer() {
                 )}
               </button>
 
-              {/* Progress bar */}
+              {/* Progress bar — draggable */}
               <div className="flex items-center gap-2 w-full">
                 <span className="text-xs text-zinc-500 tabular-nums w-10 text-right shrink-0">
                   {formatDuration(currentTime)}
                 </span>
                 <div
-                  className="flex-1 h-1 bg-zinc-700 rounded-full cursor-pointer group relative"
+                  className="flex-1 h-1 bg-zinc-700 rounded-full cursor-pointer group relative touch-none"
                   role="slider"
                   aria-label="Playback position"
                   aria-valuemin={0}
                   aria-valuemax={Math.floor(duration)}
                   aria-valuenow={Math.floor(currentTime)}
-                  onClick={handleSeek}
+                  onPointerDown={onSeekDown}
+                  onPointerMove={onSeekMove}
+                  onPointerUp={onSeekUp}
                 >
                   <div
-                    className="h-full bg-violet-500 rounded-full group-hover:bg-violet-400 transition-colors"
+                    className="h-full bg-violet-500 rounded-full group-hover:bg-violet-400 transition-colors pointer-events-none"
                     style={{ width: `${progress}%` }}
                   />
                   <div
@@ -155,35 +189,33 @@ export function AudioPlayer() {
             </div>
           )}
 
-          {/* Volume — desktop only */}
+          {/* Volume — desktop only, draggable */}
           <div className="hidden lg:flex items-center gap-2 w-32 shrink-0" aria-label="Volume">
             <button
               onClick={toggleMute}
               className="text-zinc-400 hover:text-zinc-200 transition-colors shrink-0"
               aria-label={muted ? "Sesi aç" : "Sesi kapat"}
             >
-              {muted || volume === 0 ? (
-                <VolumeX className="w-4 h-4" aria-hidden="true" />
-              ) : (
-                <Volume2 className="w-4 h-4" aria-hidden="true" />
-              )}
+              <VolumeIcon className="w-4 h-4" aria-hidden="true" />
             </button>
             <div
-              className="flex-1 h-1 bg-zinc-700 rounded-full cursor-pointer group relative"
-              onClick={handleVolumeClick}
+              className="flex-1 h-1 bg-zinc-700 rounded-full cursor-pointer group relative touch-none"
               role="slider"
               aria-label="Ses seviyesi"
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-valuenow={muted ? 0 : Math.round(volume * 100)}
+              aria-valuenow={Math.round(effectiveVolume * 100)}
+              onPointerDown={onVolDown}
+              onPointerMove={onVolMove}
+              onPointerUp={onVolUp}
             >
               <div
-                className="h-full bg-zinc-400 group-hover:bg-violet-400 rounded-full transition-colors"
-                style={{ width: `${muted ? 0 : volume * 100}%` }}
+                className="h-full bg-zinc-400 group-hover:bg-violet-400 rounded-full transition-colors pointer-events-none"
+                style={{ width: `${effectiveVolume * 100}%` }}
               />
             </div>
             <span className="text-xs text-zinc-500 tabular-nums w-7 shrink-0">
-              {muted ? "0%" : `${Math.round(volume * 100)}%`}
+              {Math.round(effectiveVolume * 100)}%
             </span>
           </div>
         </div>
