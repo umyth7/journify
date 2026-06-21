@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { formatDuration } from "@/lib/utils";
 import { useUpload } from "@/hooks/useUpload";
 import { ProcessingOrDone } from "@/components/set/ProcessingStatus";
+import { CoverCropper } from "@/components/ui/CoverCropper";
 
 const GENRES = [
   "Techno", "Minimal Techno", "Dub Techno", "Hard Techno", "Hypnotic Techno",
@@ -75,6 +76,7 @@ export default function UploadPage() {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   // Metadata state
   const [title, setTitle] = useState("");
@@ -134,11 +136,22 @@ export default function UploadPage() {
       setCoverError("Image too large. Maximum 5MB.");
       return;
     }
-    setCoverFile(file);
     const url = URL.createObjectURL(file);
+    setCropSrc(url);
+  }, []);
+
+  const handleCropComplete = useCallback((croppedFile: File) => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    setCoverFile(croppedFile);
     if (coverPreview) URL.revokeObjectURL(coverPreview);
-    setCoverPreview(url);
-  }, [coverPreview]);
+    setCoverPreview(URL.createObjectURL(croppedFile));
+  }, [cropSrc, coverPreview]);
+
+  const handleCropCancel = useCallback(() => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+  }, [cropSrc]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,6 +175,14 @@ export default function UploadPage() {
 
   // ---- MAIN FORM ----
   return (
+    <>
+    {cropSrc && (
+      <CoverCropper
+        src={cropSrc}
+        onComplete={handleCropComplete}
+        onCancel={handleCropCancel}
+      />
+    )}
     <div className="max-w-2xl mx-auto py-4 animate-fade-in">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">Upload a Set</h1>
@@ -419,5 +440,6 @@ export default function UploadPage() {
         </div>
       </form>
     </div>
+    </>
   );
 }
