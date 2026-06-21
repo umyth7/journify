@@ -7,12 +7,12 @@ Live set yükleme ve dinleme platformu. Kullanıcılar en az 40 dk'lık live set
 - **Frontend:** Next.js 14 (App Router) + TypeScript + Tailwind — Vercel'e deploy
 - **Backend:** Railway veya Render üzerinde Node.js API (ayrı servis — FFmpeg timeout sorunu nedeniyle Vercel Edge Functions kullanılmıyor)
 - **Depolama:** Cloudflare R2 (S3 uyumlu, egress ücretsiz, global CDN)
-- **Transcoding:** FFmpeg ile MP3 → AAC 128kbps (~400MB → ~230MB)
+- **Transcoding:** FFmpeg ile MP3 → AAC 128kbps (~400MB → ~230MB) — **⏳ SONRAYA BIRAKILDI (Phase 5):** MVP'de orijinal dosya R2'den direkt oynatılıyor (HTTP range request yeterli). Transcoding worker (Railway/Render + BullMQ + Redis) optimizasyon aşamasında eklenecek.
 - **Streaming:** R2'den HTTP range request ile progressive streaming (HLS yok)
 - **Veritabanı:** PostgreSQL (Railway) + Prisma ORM
 - **Auth:** Clerk veya NextAuth
 - **State:** Zustand (audio player)
-- **Queue:** BullMQ + Redis (transcoding jobs)
+- **Queue:** BullMQ + Redis (transcoding jobs) — **⏳ SONRAYA BIRAKILDI (Phase 5)**
 - **Hedef:** 100 kullanıcıyla başla, kolayca ölçeklenebilir olsun
 - **GeliştirmeStratejisi** Verilen her task sonrasında yapılan geliştirmeyi TasarımVeGeliştirme ekibine ilet.
 - 

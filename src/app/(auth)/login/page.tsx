@@ -28,10 +28,17 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const result = await signIn.create({ identifier: email, password });
+      const result = await signIn.create({ identifier: email.trim(), password: password.trim() });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         router.push("/");
+        router.refresh();
+      } else {
+        setError(
+          lang === "tr"
+            ? "Giriş tamamlanamadı. Email doğrulamanı kontrol et."
+            : "Sign in incomplete. Please check your email for verification."
+        );
       }
     } catch (err: unknown) {
       const clerkErr = err as { errors?: { longMessage?: string }[] };
@@ -87,7 +94,7 @@ export default function LoginPage() {
           autoComplete="email"
           required
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value.trim())}
         />
 
         <div className="relative">
@@ -100,6 +107,10 @@ export default function LoginPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onPaste={(e) => {
+              e.preventDefault();
+              setPassword(e.clipboardData.getData("text").trim());
+            }}
           />
           <button
             type="button"

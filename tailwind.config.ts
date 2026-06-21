@@ -8,6 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        syne: ["var(--font-syne)", "sans-serif"],
+      },
       animation: {
         shimmer: "shimmer 1.6s infinite",
         "fade-in": "fadeIn 200ms ease-out",

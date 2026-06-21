@@ -33,15 +33,22 @@ export default function RegisterPage() {
 
     try {
       const result = await signUp.create({
-        username,
-        emailAddress: email,
-        password,
+        username: username.trim(),
+        emailAddress: email.trim(),
+        password: password.trim(),
         unsafeMetadata: { role },
       });
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         router.push("/");
+        router.refresh();
+      } else {
+        setError(
+          lang === "tr"
+            ? "Kayıt tamamlanamadı. Email kutunu kontrol et ve doğrulama adımını tamamla."
+            : "Registration incomplete. Check your email to complete verification."
+        );
       }
     } catch (err: unknown) {
       const clerkErr = err as { errors?: { longMessage?: string }[] };
@@ -147,7 +154,7 @@ export default function RegisterPage() {
           pattern="[a-zA-Z0-9_]+"
           helperText={t.usernameHint}
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => setUsername(e.target.value.trim())}
         />
 
         <Input
@@ -158,7 +165,7 @@ export default function RegisterPage() {
           autoComplete="email"
           required
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value.trim())}
         />
 
         <div className="relative">
@@ -172,6 +179,10 @@ export default function RegisterPage() {
             helperText={t.passwordHint}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onPaste={(e) => {
+              e.preventDefault();
+              setPassword(e.clipboardData.getData("text").trim());
+            }}
           />
           <button
             type="button"

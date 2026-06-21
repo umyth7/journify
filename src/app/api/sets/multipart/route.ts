@@ -115,7 +115,7 @@ export async function POST(req: Request) {
         duration: Math.floor(duration),
         audioUrl,
         coverUrl: metadata.coverUrl ?? null,
-        status: "PENDING",
+        status: "READY",
         userId,
       },
     });

@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Clock, Music2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatDuration } from "@/lib/utils";
-import { AudioPlayer } from "@/components/player/AudioPlayer";
+import { PlayButton } from "@/components/set/PlayButton";
 import { LikeButton } from "@/components/set/LikeButton";
 import { EmojiReactions } from "@/components/set/EmojiReactions";
 import { FollowButton } from "@/components/profile/FollowButton";
@@ -111,6 +111,15 @@ export default async function SetDetailPage({ params }: { params: { id: string }
           </Link>
 
           <div className="flex items-center gap-3 pt-1">
+            <PlayButton
+              track={{
+                id: set.id,
+                title: set.title,
+                artist: artistName,
+                coverUrl: set.coverUrl,
+                audioUrl: set.audioUrl,
+              }}
+            />
             <LikeButton
               setId={set.id}
               initialLiked={!!likeRecord}
@@ -126,11 +135,6 @@ export default async function SetDetailPage({ params }: { params: { id: string }
             )}
           </div>
         </div>
-      </div>
-
-      {/* Player */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-        <AudioPlayer />
       </div>
 
       {/* Emoji Reactions */}

@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import { SetCard } from "@/components/set/SetCard";
+import { MoodFilter, type MoodId } from "@/components/set/MoodFilter";
 import type { Set } from "@/types";
 
 const MOCK_SETS: Set[] = [
@@ -164,17 +168,98 @@ const MOCK_SETS: Set[] = [
   },
 ];
 
+const MOOD_LABELS: Record<string, string> = {
+  HYPNOTIC: "Hypnotic",
+  EUPHORIC: "Euphoric",
+  TRIBAL: "Tribal",
+  FLOATING: "Floating",
+  DARK: "Dark",
+  MELANCHOLIC: "Melancholic",
+  RAW: "Raw",
+  COSMIC: "Cosmic",
+};
+
 export default function FeedPage() {
+  const [activeMood, setActiveMood] = useState<MoodId>(null);
+
+  const filteredSets = activeMood
+    ? MOCK_SETS.filter((s) => s.mood === activeMood)
+    : MOCK_SETS;
+
   return (
-    <div className="py-8 space-y-12">
-      <section>
-        <h1 className="text-2xl font-bold text-zinc-100 tracking-tight mb-1">New Arrivals</h1>
-        <p className="text-sm text-zinc-500 mb-6">Fresh sets from the community</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {MOCK_SETS.map((set) => (
-            <SetCard key={set.id} set={set} />
-          ))}
+    <div className="py-6 space-y-10">
+
+      {/* ── Hero ── */}
+      <section className="relative text-center pt-8 pb-4">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden"
+        >
+          <div className="w-[700px] h-[220px] bg-violet-900/12 blur-[90px] rounded-full" />
         </div>
+
+        <div className="relative">
+          <p className="text-[11px] font-medium text-violet-400 uppercase tracking-[0.25em] mb-4">
+            Music is a Journey
+          </p>
+          <h1 className="text-4xl sm:text-5xl font-bold font-syne text-zinc-100 leading-tight tracking-tight text-balance">
+            How do you feel
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-purple-400 to-violet-300">
+              right now?
+            </span>
+          </h1>
+          <p className="text-sm text-zinc-500 mt-4 max-w-xs mx-auto leading-relaxed">
+            Pick a mood — find live sets that match your emotional state.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Mood Filter ── */}
+      <section aria-label="Browse by mood">
+        <MoodFilter value={activeMood} onChange={setActiveMood} />
+      </section>
+
+      {/* ── Feed ── */}
+      <section>
+        <div className="flex items-baseline justify-between mb-5">
+          <div>
+            <h2 className="text-xl font-bold font-syne text-zinc-100 tracking-tight">
+              {activeMood ? `${MOOD_LABELS[activeMood]} Sets` : "New Arrivals"}
+            </h2>
+            <p className="text-sm text-zinc-500 mt-0.5">
+              {activeMood
+                ? `Filtered by mood · ${filteredSets.length} set${filteredSets.length !== 1 ? "s" : ""}`
+                : "Fresh sets from the community"}
+            </p>
+          </div>
+          {activeMood && (
+            <button
+              onClick={() => setActiveMood(null)}
+              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors duration-150 px-3 py-1.5 rounded-lg hover:bg-zinc-800 min-h-[36px]"
+            >
+              Clear filter
+            </button>
+          )}
+        </div>
+
+        {filteredSets.length === 0 ? (
+          <div className="text-center py-20 space-y-2">
+            <p className="text-zinc-500 text-sm">No sets found for this mood yet.</p>
+            <button
+              onClick={() => setActiveMood(null)}
+              className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
+            >
+              Show all sets
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 animate-fade-in">
+            {filteredSets.map((set) => (
+              <SetCard key={set.id} set={set} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
