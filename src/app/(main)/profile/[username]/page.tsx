@@ -9,8 +9,15 @@ import { FollowButton } from "@/components/profile/FollowButton";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import type { Set } from "@/types";
 
-export default async function ProfilePage({ params }: { params: { username: string } }) {
+export default async function ProfilePage({
+  params,
+  searchParams,
+}: {
+  params: { username: string };
+  searchParams: { tab?: string };
+}) {
   const { userId } = await auth();
+  const activeTab = searchParams.tab === "likes" ? "likes" : "sets";
 
   const user = await db.user.findUnique({
     where: { username: params.username },
@@ -33,11 +40,35 @@ export default async function ProfilePage({ params }: { params: { username: stri
       })
     : null;
 
-  const likedSetIds = userId
+  // Fetch liked sets when on likes tab
+  const likedSetsRaw = activeTab === "likes"
+    ? await db.like.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        include: {
+          set: {
+            include: {
+              user: { select: { id: true, username: true, displayName: true, avatarUrl: true, bio: true } },
+              _count: { select: { likes: true } },
+            },
+          },
+        },
+      })
+    : [];
+
+  const viewerLikedSetIds = userId
     ? new Set(
-        (await db.like.findMany({ where: { userId, setId: { in: user.sets.map((s) => s.id) } }, select: { setId: true } })).map(
-          (l) => l.setId
-        )
+        (await db.like.findMany({
+          where: {
+            userId,
+            setId: {
+              in: activeTab === "sets"
+                ? user.sets.map((s) => s.id)
+                : likedSetsRaw.map((l) => l.set.id),
+            },
+          },
+          select: { setId: true },
+        })).map((l) => l.setId)
       )
     : new Set<string>();
 
@@ -57,7 +88,24 @@ export default async function ProfilePage({ params }: { params: { username: stri
     userId: s.userId,
     user: { id: user.id, username: user.username, displayName: user.displayName, avatarUrl: user.avatarUrl, bio: user.bio },
     likesCount: s._count.likes,
-    isLiked: likedSetIds.has(s.id),
+    isLiked: viewerLikedSetIds.has(s.id),
+  }));
+
+  const likedSets: Set[] = likedSetsRaw.map((l) => ({
+    id: l.set.id,
+    title: l.set.title,
+    description: l.set.description,
+    genre: l.set.genre,
+    mood: l.set.mood as Set["mood"],
+    duration: l.set.duration,
+    audioUrl: l.set.audioUrl,
+    coverUrl: l.set.coverUrl,
+    status: l.set.status as Set["status"],
+    createdAt: l.set.createdAt,
+    userId: l.set.userId,
+    user: l.set.user,
+    likesCount: l.set._count.likes,
+    isLiked: viewerLikedSetIds.has(l.set.id),
   }));
 
   return (
@@ -161,18 +209,55 @@ export default async function ProfilePage({ params }: { params: { username: stri
         </div>
       </div>
 
+      {/* Tab switcher */}
+      <div className="flex gap-1 border-b border-zinc-800">
+        <Link
+          href={`/profile/${user.username}`}
+          className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            activeTab === "sets"
+              ? "border-violet-500 text-zinc-100"
+              : "border-transparent text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          Setler
+          <span className="ml-1.5 text-xs text-zinc-600">{user._count.sets}</span>
+        </Link>
+        <Link
+          href={`/profile/${user.username}?tab=likes`}
+          className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            activeTab === "likes"
+              ? "border-violet-500 text-zinc-100"
+              : "border-transparent text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          Beğeniler
+        </Link>
+      </div>
+
       {/* Sets grid */}
-      {sets.length === 0 ? (
-        <p className="text-sm text-zinc-600 py-10 text-center">Henüz yayınlanmış bir set yok.</p>
-      ) : (
-        <section className="space-y-4">
-          <h2 className="text-base font-semibold text-zinc-300">Setler</h2>
+      {activeTab === "sets" && (
+        sets.length === 0 ? (
+          <p className="text-sm text-zinc-600 py-10 text-center">Henüz yayınlanmış bir set yok.</p>
+        ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {sets.map((set) => (
               <SetCard key={set.id} set={set} />
             ))}
           </div>
-        </section>
+        )
+      )}
+
+      {/* Liked sets grid */}
+      {activeTab === "likes" && (
+        likedSets.length === 0 ? (
+          <p className="text-sm text-zinc-600 py-10 text-center">Henüz beğenilmiş bir set yok.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {likedSets.map((set) => (
+              <SetCard key={set.id} set={set} />
+            ))}
+          </div>
+        )
       )}
     </div>
   );

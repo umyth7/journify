@@ -4,21 +4,27 @@ import { db } from "@/lib/db";
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") ?? "").trim();
+  const mood = searchParams.get("mood") ?? "";
   const limit = Math.min(parseInt(searchParams.get("limit") ?? "20", 10) || 20, 50);
 
-  if (q.length < 2) {
+  if (q.length < 2 && !mood) {
     return NextResponse.json({ sets: [], artists: [] });
   }
+
+  const moodFilter = mood ? { mood: mood as import("@prisma/client").Mood } : {};
 
   const [sets, artists] = await Promise.all([
     db.set.findMany({
       where: {
         status: "READY",
-        OR: [
-          { title: { contains: q, mode: "insensitive" } },
-          { description: { contains: q, mode: "insensitive" } },
-          { genre: { contains: q, mode: "insensitive" } },
-        ],
+        ...moodFilter,
+        ...(q.length >= 2 ? {
+          OR: [
+            { title: { contains: q, mode: "insensitive" } },
+            { description: { contains: q, mode: "insensitive" } },
+            { genre: { contains: q, mode: "insensitive" } },
+          ],
+        } : {}),
       },
       take: limit,
       orderBy: { createdAt: "desc" },
