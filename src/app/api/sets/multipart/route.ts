@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Only audio files are allowed (MP3, WAV, FLAC, AAC, OGG)" }, { status: 400 });
     }
     if (fileSize > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "File too large. Maximum 500MB." }, { status: 400 });
+      return NextResponse.json({ error: "File too large. Maximum 2GB." }, { status: 400 });
     }
 
     const ext = filename.split(".").pop() ?? "mp3";

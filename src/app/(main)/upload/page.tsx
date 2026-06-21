@@ -43,7 +43,7 @@ const MOOD_ACTIVE: Record<string, string> = {
 
 const MIN_DURATION = 2400; // 40 min
 const MAX_DURATION = 10800; // 3 hours
-const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
 
 async function getAudioDuration(file: File): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -93,7 +93,7 @@ export default function UploadPage() {
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      setAudioError("File too large. Maximum 500MB.");
+      setAudioError("File too large. Maximum 2GB.");
       return;
     }
 
@@ -213,7 +213,7 @@ export default function UploadPage() {
             >
               <Upload className="w-8 h-8 text-zinc-600 mx-auto mb-3" />
               <p className="text-sm font-medium text-zinc-300">Drop your audio file here</p>
-              <p className="text-xs text-zinc-600 mt-1">or click to browse · MP3, WAV, FLAC, AAC, OGG · max 500MB</p>
+              <p className="text-xs text-zinc-600 mt-1">or click to browse · MP3, WAV, FLAC, AAC, OGG · max 2GB</p>
             </div>
           )}
 
