@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useSignUp } from "@clerk/nextjs";
 import { Eye, EyeOff, Mic2, Headphones } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,6 @@ type Role = "artist" | "listener";
 
 export default function RegisterPage() {
   const { signUp, setActive, isLoaded } = useSignUp();
-  const router = useRouter();
   const { lang, setLang } = useLanguage();
   const t = authTranslations[lang];
 
@@ -41,8 +39,7 @@ export default function RegisterPage() {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/");
-        router.refresh();
+        window.location.href = "/";
       } else {
         setError(
           lang === "tr"

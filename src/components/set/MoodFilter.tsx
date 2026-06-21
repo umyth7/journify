@@ -153,7 +153,7 @@ export function MoodFilter({ value, onChange }: MoodFilterProps) {
           lg:grid-cols-8
         "
       >
-        {MOODS.map(({ id, label, tagline, Icon, idle, hover, active, iconIdle, iconActive, textIdle, textActive }) => {
+        {MOODS.map(({ id, label, tagline, Icon, idle, hover, active, iconIdle, iconActive, textActive }) => {
           const isActive = value === id;
           return (
             <button
@@ -165,9 +165,10 @@ export function MoodFilter({ value, onChange }: MoodFilterProps) {
                 group relative flex-shrink-0 w-[148px] md:w-auto snap-start
                 flex flex-col items-center justify-center gap-2.5
                 px-3 py-5 rounded-2xl border backdrop-blur-sm
-                transition-all duration-200 cursor-pointer
+                transition-all duration-300 cursor-pointer
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950
                 ${isActive ? active : `${idle} ${hover}`}
+                ${!isActive && value !== null ? "opacity-35 hover:opacity-70 scale-[0.97] hover:scale-[0.99]" : "opacity-100 scale-100"}
               `}
             >
               {/* Icon */}

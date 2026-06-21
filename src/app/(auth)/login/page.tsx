@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useSignIn } from "@clerk/nextjs";
 import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,6 @@ import { useLanguage, authTranslations } from "@/hooks/useLanguage";
 
 export default function LoginPage() {
   const { signIn, setActive, isLoaded } = useSignIn();
-  const router = useRouter();
   const { lang, setLang } = useLanguage();
   const t = authTranslations[lang];
 
@@ -31,8 +29,7 @@ export default function LoginPage() {
       const result = await signIn.create({ identifier: email.trim(), password: password.trim() });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/");
-        router.refresh();
+        window.location.href = "/";
       } else {
         setError(
           lang === "tr"
