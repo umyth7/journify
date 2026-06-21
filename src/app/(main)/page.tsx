@@ -33,11 +33,6 @@ const MOOD_THEMES: Record<Exclude<MoodId, null> | "default", MoodTheme> = {
 
 const TRANSITION = "500ms cubic-bezier(0.4, 0, 0.2, 1)";
 
-const MOOD_LABELS: Record<string, string> = {
-  HYPNOTIC: "Hypnotic", EUPHORIC: "Euphoric", TRIBAL: "Tribal",
-  FLOATING: "Floating", DARK: "Dark", MELANCHOLIC: "Melancholic",
-  RAW: "Raw", COSMIC: "Cosmic",
-};
 
 type SortMode = "new" | "trending";
 

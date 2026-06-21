@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Upload, Music, ImagePlus, X, CheckCircle2, AlertCircle, Loader2, Disc3, Sparkles, Globe2, Waves, Moon, CloudDrizzle, Zap, Rocket } from "lucide-react";
+import { Upload, Music, ImagePlus, X, AlertCircle, Loader2, Disc3, Sparkles, Globe2, Waves, Moon, CloudDrizzle, Zap, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDuration } from "@/lib/utils";
