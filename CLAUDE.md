@@ -130,6 +130,22 @@ Genre etiketleri yerine **duygusal durumlar** ön plana çıkarılır.
 
 ## Geliştirme Günlüğü
 
+### 2026-06-22 — Comments sistemi + Search mood filtresi + Profil beğeniler sekmesi
+
+#### ✅ Tamamlananlar
+- **Comments sistemi** — `Comment` Prisma modeli + migration (`20260621100000_add_comments`); `GET/POST /api/sets/[id]/comments`; `DELETE /api/sets/[id]/comments/[commentId]` (owner-only); `Comments` bileşeni (optimistic UI, silme, login redirect); `/sets/[id]` detay sayfasına entegre
+- **Search mood filtresi** — `/search` sayfasına 8 mood chip'i eklendi (toggle, URL persistence); `/api/search` endpoint'i `mood` query param kabul ediyor; mood-only arama (text olmadan) destekleniyor
+- **Profil beğeniler sekmesi** — `/profile/[username]?tab=likes` ile "Beğeniler" sekmesi; `Like` join ile kullanıcının beğendiği setler listeleniyor; tab switcher UI (aktif sekme violet underline)
+- **TypeScript** — sıfır hata (`npx tsc --noEmit` temiz)
+
+#### ⚠️ Railway Migration Notu
+`prisma/migrations/20260621100000_add_comments/migration.sql` Railway PostgreSQL'e uygulanmalı:
+```
+npx prisma migrate deploy
+```
+
+---
+
 ### 2026-06-21 — Phase 3 + 4 + 5 Tamamlandı
 
 #### ✅ Tamamlananlar
