@@ -1,0 +1,33 @@
+# Senssetify
+> Mood-based electronic music live set discovery platform.
+
+Senssetify hosts long-form live DJ sets (40 minutes or longer) curated by emotional state.
+It is built for underground electronic music listeners and artists — primarily Techno, House, Ambient, and Experimental genres.
+
+## Core Concept
+Instead of genre tags, Senssetify organizes content by mood:
+- 🌀 Hypnotic — Minimal Techno, Dub Techno (time suspends, loops continue)
+- ✨ Euphoric — Melodic Techno/House, Trance (chest opens, bittersweet energy)
+- 🌍 Tribal — Afro House, Organic House (cellular response, primal rhythm)
+- 🌊 Floating — Ambient, Drone, Kosmische (gravity fades, drifting)
+- 🌑 Dark — Industrial Techno, Dark Minimal (underground, no light, only rhythm)
+- 🌙 Melancholic — Deep House, Atmospheric Techno (bittersweet human feeling)
+- ⚡ Raw — Hard Techno, Acid, Schranz (pure energy release)
+- 🚀 Cosmic — Experimental, Space Music (small human, large universe)
+
+## Content Access
+- Public: Homepage (/), Search (/search), Set pages (/sets/[id]), Artist profiles (/profile/[username])
+- Requires login: Upload (/upload), Like, Follow, Comment
+
+## Technical Stack
+- Next.js 14 (App Router) on Vercel
+- PostgreSQL (Railway) + Prisma ORM
+- Cloudflare R2 for audio/image storage
+- Clerk for authentication
+
+## Target Audience
+Underground electronic music DJs and listeners. Community hubs: Boiler Room, Istanbul underground (Arkaoda, Klein), diaspora scenes in Berlin, Amsterdam, Barcelona.
+
+## Contact / Domain
+- Website: https://www.senssetify.com
+- Brand: Senssetify (also referred to as "Journey" internally)

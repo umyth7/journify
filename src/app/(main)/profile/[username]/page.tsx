@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,6 +9,45 @@ import { SetCard } from "@/components/set/SetCard";
 import { FollowButton } from "@/components/profile/FollowButton";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import type { Set } from "@/types";
+
+const BASE_URL = "https://www.senssetify.com";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { username: string };
+}): Promise<Metadata> {
+  const user = await db.user.findUnique({
+    where: { username: params.username },
+    select: { displayName: true, bio: true, avatarUrl: true },
+  });
+
+  if (!user) return { title: "Profile not found" };
+
+  const displayName = user.displayName ?? params.username;
+  const description = user.bio ?? `Discover live sets by ${displayName} on Senssetify.`;
+
+  return {
+    title: `${displayName} — Live Sets`,
+    description,
+    alternates: { canonical: `${BASE_URL}/profile/${params.username}` },
+    openGraph: {
+      title: `${displayName} on Senssetify`,
+      description,
+      type: "profile",
+      url: `${BASE_URL}/profile/${params.username}`,
+      ...(user.avatarUrl
+        ? { images: [{ url: user.avatarUrl, width: 400, height: 400, alt: displayName }] }
+        : {}),
+    },
+    twitter: {
+      card: user.avatarUrl ? "summary" : "summary",
+      title: `${displayName} on Senssetify`,
+      description,
+      ...(user.avatarUrl ? { images: [user.avatarUrl] } : {}),
+    },
+  };
+}
 
 export default async function ProfilePage({
   params,
@@ -108,8 +148,22 @@ export default async function ProfilePage({
     isLiked: viewerLikedSetIds.has(l.set.id),
   }));
 
+  const personSchema = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: displayName,
+    url: `${BASE_URL}/profile/${user.username}`,
+    ...(user.bio ? { description: user.bio } : {}),
+    ...(user.avatarUrl ? { image: user.avatarUrl } : {}),
+    ...(user.instagram ? { sameAs: [user.instagram] } : {}),
+  };
+
   return (
     <div className="py-10 space-y-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+      />
       {/* Profile header */}
       <div className="flex items-start gap-6">
         <div className="shrink-0">

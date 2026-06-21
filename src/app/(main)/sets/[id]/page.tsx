@@ -12,27 +12,31 @@ import { EmojiReactions } from "@/components/set/EmojiReactions";
 import { FollowButton } from "@/components/profile/FollowButton";
 import { Comments } from "@/components/set/Comments";
 
+const BASE_URL = "https://www.senssetify.com";
+
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const set = await db.set.findUnique({
     where: { id: params.id },
     select: { title: true, description: true, coverUrl: true, user: { select: { displayName: true, username: true } } },
   });
 
-  if (!set) return { title: "Set not found — Journey" };
+  if (!set) return { title: "Set not found" };
 
   const artist = set.user.displayName ?? set.user.username;
   const title = `${set.title} by ${artist}`;
   const description = set.description.slice(0, 160);
-  const image = set.coverUrl ?? `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/og-default.png`;
+  const image = set.coverUrl ?? `${BASE_URL}/opengraph-image`;
 
   return {
-    title: `${title} — Journey`,
+    title,
     description,
+    alternates: { canonical: `${BASE_URL}/sets/${params.id}` },
     openGraph: {
       title,
       description,
       images: [{ url: image, width: 1200, height: 630, alt: title }],
       type: "music.song",
+      url: `${BASE_URL}/sets/${params.id}`,
     },
     twitter: {
       card: "summary_large_image",
@@ -91,8 +95,36 @@ export default async function SetDetailPage({ params }: { params: { id: string }
   const artistName = set.user.displayName ?? set.user.username;
   const isOwnProfile = userId === set.userId;
 
+  const durationIso = (() => {
+    const total = set.duration ?? 0;
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    return `PT${h > 0 ? `${h}H` : ""}${m > 0 ? `${m}M` : ""}${s > 0 ? `${s}S` : ""}` || "PT0S";
+  })();
+
+  const musicSchema = {
+    "@context": "https://schema.org",
+    "@type": "MusicRecording",
+    name: set.title,
+    description: set.description,
+    byArtist: {
+      "@type": "Person",
+      name: artistName,
+      url: `${BASE_URL}/profile/${set.user.username}`,
+    },
+    duration: durationIso,
+    url: `${BASE_URL}/sets/${set.id}`,
+    ...(set.coverUrl ? { image: set.coverUrl } : {}),
+    genre: set.genre ?? undefined,
+  };
+
   return (
     <div className="max-w-3xl mx-auto py-10 space-y-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(musicSchema) }}
+      />
       {/* Hero */}
       <div className="flex gap-6 items-start">
         <div className="relative shrink-0 w-48 h-48 rounded-2xl overflow-hidden bg-zinc-800 shadow-2xl shadow-black/50">
