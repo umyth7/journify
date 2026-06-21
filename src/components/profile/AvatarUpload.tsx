@@ -28,7 +28,8 @@ export function AvatarUpload({ currentUrl, username, onSuccess }: AvatarUploadPr
 
     setError(null);
     setUploading(true);
-    setPreview(URL.createObjectURL(file));
+    const objectUrl = URL.createObjectURL(file);
+    setPreview(objectUrl);
 
     try {
       const res = await fetch("/api/users/avatar", {
@@ -58,6 +59,7 @@ export function AvatarUpload({ currentUrl, username, onSuccess }: AvatarUploadPr
       setPreview(null);
     } finally {
       setUploading(false);
+      URL.revokeObjectURL(objectUrl);
     }
   };
 

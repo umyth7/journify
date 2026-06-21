@@ -64,10 +64,6 @@ export default function FeedPage() {
     fetchSets(activeMood, sort);
   }, [activeMood, sort, fetchSets]);
 
-  const handleMoodChange = (mood: MoodId) => {
-    setActiveMood(mood);
-  };
-
   return (
     <div className="py-6 space-y-10">
 
@@ -124,7 +120,7 @@ export default function FeedPage() {
 
       {/* ── Mood Filter ───────────────────────────────────────────────────────── */}
       <section aria-label="Browse by mood">
-        <MoodFilter value={activeMood} onChange={handleMoodChange} />
+        <MoodFilter value={activeMood} onChange={setActiveMood} />
       </section>
 
       {/* ── Feed ─────────────────────────────────────────────────────────────── */}
@@ -154,7 +150,7 @@ export default function FeedPage() {
             </p>
             {activeMood && (
               <button
-                onClick={() => handleMoodChange(null)}
+                onClick={() => setActiveMood(null)}
                 className="text-xs px-3 py-1.5 rounded-lg min-h-[36px] border transition-opacity duration-150 hover:opacity-80 active:opacity-60"
                 style={{
                   color: theme.labelColor,
@@ -178,7 +174,7 @@ export default function FeedPage() {
           <div className="text-center py-20 space-y-2">
             <p className="text-zinc-500 text-sm">No sets found for this mood yet.</p>
             <button
-              onClick={() => handleMoodChange(null)}
+              onClick={() => setActiveMood(null)}
               className="text-xs transition-colors duration-150 hover:opacity-80 min-h-[44px] px-4"
               style={{ color: theme.labelColor }}
             >

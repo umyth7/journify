@@ -16,30 +16,21 @@ export function ProcessingOrDone({ setId, onReset, onView }: Props) {
   const [setStatus, setSetStatus] = useState<SetStatus>("PROCESSING");
 
   useEffect(() => {
-    // Poll every 4 seconds until READY or FAILED
     const poll = async () => {
       try {
         const res = await fetch(`/api/sets/${setId}/status`);
         if (!res.ok) return;
         const data = await res.json();
         setSetStatus(data.status);
+        if (data.status === "READY" || data.status === "FAILED") {
+          clearInterval(timer);
+        }
       } catch {}
     };
 
-    poll(); // immediate first check
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/sets/${setId}/status`);
-        if (!res.ok) return;
-        const data = await res.json();
-        setSetStatus(data.status);
-        if (data.status === "READY" || data.status === "FAILED") {
-          clearInterval(interval);
-        }
-      } catch {}
-    }, 4000);
-
-    return () => clearInterval(interval);
+    poll();
+    const timer = setInterval(poll, 4000);
+    return () => clearInterval(timer);
   }, [setId]);
 
   if (setStatus === "PROCESSING" || setStatus === "PENDING") {
