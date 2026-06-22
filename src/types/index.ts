@@ -18,6 +18,7 @@ export interface Set {
   audioUrl: string;
   coverUrl: string | null;
   status: "PENDING" | "PROCESSING" | "READY" | "FAILED";
+  playsCount?: number;
   createdAt: Date;
   userId: string;
   user: User;

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 
 export async function GET(req: Request) {
+  const { userId } = await auth();
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") ?? "").trim();
   const mood = searchParams.get("mood") ?? "";
@@ -12,6 +14,19 @@ export async function GET(req: Request) {
   }
 
   const moodFilter = mood ? { mood: mood as import("@prisma/client").Mood } : {};
+
+  const artistQuery = q.length >= 2
+    ? db.user.findMany({
+        where: {
+          OR: [
+            { username: { contains: q, mode: "insensitive" } },
+            { displayName: { contains: q, mode: "insensitive" } },
+          ],
+        },
+        take: 5,
+        select: { id: true, username: true, displayName: true, avatarUrl: true, bio: true },
+      })
+    : Promise.resolve([]);
 
   const [sets, artists] = await Promise.all([
     db.set.findMany({
@@ -31,25 +46,25 @@ export async function GET(req: Request) {
       include: {
         user: { select: { id: true, username: true, displayName: true, avatarUrl: true, bio: true } },
         _count: { select: { likes: true } },
+        ...(userId
+          ? { likes: { where: { userId }, select: { userId: true } } }
+          : {}),
       },
     }),
-    db.user.findMany({
-      where: {
-        OR: [
-          { username: { contains: q, mode: "insensitive" } },
-          { displayName: { contains: q, mode: "insensitive" } },
-        ],
-      },
-      take: 5,
-      select: { id: true, username: true, displayName: true, avatarUrl: true, bio: true },
-    }),
+    artistQuery,
   ]);
 
-  const setsResult = sets.map(({ _count, ...s }) => ({
-    ...s,
-    likesCount: _count.likes,
-    isLiked: false,
-  }));
+  const setsResult = sets.map((s) => {
+    const { _count, likes, ...rest } = s as typeof s & {
+      _count: { likes: number };
+      likes?: { userId: string }[];
+    };
+    return {
+      ...rest,
+      likesCount: _count.likes,
+      isLiked: userId ? (likes?.length ?? 0) > 0 : false,
+    };
+  });
 
   return NextResponse.json({ sets: setsResult, artists });
 }

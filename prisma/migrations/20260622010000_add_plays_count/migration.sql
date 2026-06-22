@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Set" ADD COLUMN "playsCount" INTEGER NOT NULL DEFAULT 0;

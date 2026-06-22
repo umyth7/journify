@@ -37,6 +37,7 @@ model Set {
   audioUrl    String
   coverUrl    String?
   status      SetStatus @default(PENDING)
+  playsCount  Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

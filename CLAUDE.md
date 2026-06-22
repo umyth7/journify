@@ -76,6 +76,9 @@ Toplam: ~14 hafta (haftada 4 gün × 8 saat = 32 saat/hafta)
 - ✅ Beta email listesi — `BetaSubscriber` Prisma modeli + migration (`20260622000000_add_beta_email`); `POST /api/beta` (email kayıt, duplicate kontrol); `GET /api/beta` (admin, `x-admin-secret` header); `BetaSignupForm` bileşeni (optimistic UI, success/already state)
 - ✅ Analytics — `NEXT_PUBLIC_UMAMI_WEBSITE_ID` + `NEXT_PUBLIC_UMAMI_URL` veya `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` env var; root layout'a koşullu `<script defer />` eklendi; zero-dependency (env ayarlanmazsa script eklenmez)
 - ✅ Email bildirimleri — `src/lib/email.ts` (Resend REST API, SDK gerektirmez; `RESEND_API_KEY` yoksa no-op); `sendFollowNotification` + `sendNewSetNotification`; follow endpoint'inde otomatik tetikleme (24h rate-limit + `EmailNotificationLog`); set READY olduğunda follower bildirimi (`/api/sets/[id]/status` PATCH + multipart complete); `EmailNotificationLog` Prisma modeli (duplicate koruması)
+- ✅ BetaSignupForm ana sayfaya entegre edildi — hero ile mood filter arasına "Early access" CTA olarak eklendi
+- ✅ Play count takibi — `Set` modeline `playsCount Int @default(0)` eklendi; `POST /api/sets/[id]/play` endpoint (anonim + kimlikli); Zustand player store'da `play()` çağrısında otomatik fire-and-forget; migration: `20260622010000_add_plays_count`
+- ✅ Search API isLiked fix — `/api/search` artık kimlik doğrulamalı kullanıcı için doğru `isLiked` döndürüyor (eskiden hep `false` dönüyordu)
 - [ ] Vercel env vars ayarlanacak: `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_UMAMI_WEBSITE_ID` (veya `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`), `ADMIN_SECRET`
 
 ## Temel Özellikler
@@ -130,6 +133,25 @@ Genre etiketleri yerine **duygusal durumlar** ön plana çıkarılır.
 ---
 
 ## Geliştirme Günlüğü
+
+### 2026-06-22 — Play count + Search isLiked fix + BetaSignupForm CTA
+
+#### Boşluk Raporu (Kod Tabanı vs CLAUDE.md)
+- BetaSignupForm bileşeni oluşturulmuştu ama hiçbir sayfada render edilmiyordu (kritik launch eksikliği)
+- `/api/search` her zaman `isLiked: false` dönüyordu — kimlik doğrulamalı kullanıcılar için hatalı veri
+- Mood-only arama yapılırken gereksiz user sorgusu çalışıyordu
+- Play/listen takip sistemi yoktu (analytics ve trending algoritması için önemli)
+
+#### Tamamlananlar
+- **BetaSignupForm ana sayfaya entegre edildi** — `src/app/(main)/page.tsx` güncellendi: hero bölümünün altına "Early access" label + `BetaSignupForm` bileşeni eklendi; `max-w-xl mx-auto` ile ortalı, mevcut tasarım diliyle uyumlu
+- **Play count sistemi** — `prisma/schema.prisma`'ya `Set` modeline `playsCount Int @default(0)` eklendi; `prisma/migrations/20260622010000_add_plays_count/migration.sql` oluşturuldu; `POST /api/sets/[id]/play` endpoint (`src/app/api/sets/[id]/play/route.ts`) — no-auth, atomik `$executeRaw` increment (Prisma client yeniden üretmeden raw SQL ile); `src/store/player.ts` güncellendi — `play()` çağrısında fire-and-forget `trackPlay(track.id)` tetikleniyor; `src/types/index.ts`'e `playsCount?: number` eklendi
+- **Search API isLiked fix** — `src/app/api/search/route.ts`: `auth()` ile `userId` alınıyor; set sorgusuna `userId ? { likes: { where: { userId }, select: { userId: true } } } : {}` eklendi; `isLiked: userId ? (likes?.length ?? 0) > 0 : false` ile doğru değer dönüyor; mood-only aramada user sorgusu `Promise.resolve([])` ile kısa devre yapıyor
+
+#### Bekleyenler
+- `npx prisma generate --no-engine` Railway/Vercel deploy öncesi çalıştırılmalı (playsCount alanı için)
+- `npx prisma migrate deploy` Railway PostgreSQL'e uygulanmalı (20260622010000_add_plays_count)
+
+---
 
 ### 2026-06-22 — Phase 6 Launch: Beta listesi + Analytics + Email bildirimleri
 
