@@ -6,14 +6,11 @@ import { useSignUp } from "@clerk/nextjs";
 import { Eye, EyeOff, Mic2, Headphones } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useLanguage, authTranslations } from "@/hooks/useLanguage";
 
 type Role = "artist" | "listener";
 
 export default function RegisterPage() {
   const { signUp, setActive, isLoaded } = useSignUp();
-  const { lang, setLang } = useLanguage();
-  const t = authTranslations[lang];
 
   const [role, setRole] = useState<Role>("listener");
   const [username, setUsername] = useState("");
@@ -43,22 +40,14 @@ export default function RegisterPage() {
         await setActive({ session: result.createdSessionId });
         window.location.href = "/";
       } else if (result.status === "missing_requirements") {
-        // Email verification required — send OTP and show verification step
         await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
         setVerifying(true);
       } else {
-        setError(
-          lang === "tr"
-            ? "Kayıt tamamlanamadı. Tekrar dene."
-            : "Registration incomplete. Please try again."
-        );
+        setError("Registration incomplete. Please try again.");
       }
     } catch (err: unknown) {
       const clerkErr = err as { errors?: { longMessage?: string }[] };
-      setError(
-        clerkErr.errors?.[0]?.longMessage ??
-          (lang === "tr" ? "Kayıt başarısız. Tekrar dene." : "Sign up failed. Please try again.")
-      );
+      setError(clerkErr.errors?.[0]?.longMessage ?? "Sign up failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -75,50 +64,34 @@ export default function RegisterPage() {
         await setActive({ session: result.createdSessionId });
         window.location.href = "/";
       } else {
-        setError(lang === "tr" ? "Doğrulama tamamlanamadı." : "Verification incomplete.");
+        setError("Verification incomplete.");
       }
     } catch (err: unknown) {
       const clerkErr = err as { errors?: { longMessage?: string }[] };
-      setError(clerkErr.errors?.[0]?.longMessage ?? (lang === "tr" ? "Geçersiz kod." : "Invalid code."));
+      setError(clerkErr.errors?.[0]?.longMessage ?? "Invalid code.");
     } finally {
       setLoading(false);
     }
   };
 
   const roles: { id: Role; icon: React.ReactNode; label: string; desc: string }[] = [
-    {
-      id: "artist",
-      icon: <Mic2 className="w-5 h-5" aria-hidden="true" />,
-      label: t.artist,
-      desc: t.artistDesc,
-    },
-    {
-      id: "listener",
-      icon: <Headphones className="w-5 h-5" aria-hidden="true" />,
-      label: t.listener,
-      desc: t.listenerDesc,
-    },
+    { id: "artist",   icon: <Mic2 className="w-5 h-5" aria-hidden="true" />,      label: "Artist",   desc: "Upload & share live sets" },
+    { id: "listener", icon: <Headphones className="w-5 h-5" aria-hidden="true" />, label: "Listener", desc: "Discover & follow artists" },
   ];
 
   if (verifying) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-100">
-            {lang === "tr" ? "Email doğrulama" : "Verify your email"}
-          </h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            {lang === "tr"
-              ? `${email} adresine gönderilen kodu gir.`
-              : `Enter the code sent to ${email}.`}
-          </p>
+          <h1 className="text-xl font-semibold text-zinc-100">Verify your email</h1>
+          <p className="text-sm text-zinc-500 mt-1">Enter the code sent to {email}.</p>
         </div>
 
         <form onSubmit={handleVerify} className="space-y-4" noValidate>
           <Input
             id="code"
             type="text"
-            label={lang === "tr" ? "Doğrulama kodu" : "Verification code"}
+            label="Verification code"
             placeholder="123456"
             autoComplete="one-time-code"
             inputMode="numeric"
@@ -134,7 +107,7 @@ export default function RegisterPage() {
           )}
 
           <Button type="submit" size="lg" loading={loading} className="w-full">
-            {loading ? (lang === "tr" ? "Doğrulanıyor…" : "Verifying…") : (lang === "tr" ? "Doğrula" : "Verify")}
+            {loading ? "Verifying…" : "Verify"}
           </Button>
 
           <button
@@ -142,7 +115,7 @@ export default function RegisterPage() {
             onClick={() => { setVerifying(false); setCode(""); setError(""); }}
             className="w-full text-xs text-zinc-500 hover:text-zinc-300 transition-colors py-2"
           >
-            {lang === "tr" ? "← Geri dön" : "← Go back"}
+            ← Go back
           </button>
         </form>
       </div>
@@ -151,40 +124,14 @@ export default function RegisterPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header row: title + language switcher */}
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-100">{t.createAccount}</h1>
-          <p className="text-sm text-zinc-500 mt-1">{t.createAccountSub}</p>
-        </div>
-
-        {/* Language toggle */}
-        <div
-          role="group"
-          aria-label="Language"
-          className="flex items-center bg-zinc-800 border border-zinc-700/50 rounded-lg p-0.5 shrink-0 mt-0.5"
-        >
-          {(["en", "tr"] as const).map((l) => (
-            <button
-              key={l}
-              type="button"
-              onClick={() => setLang(l)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all duration-150 ${
-                lang === l
-                  ? "bg-violet-600 text-white shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
-              }`}
-              aria-pressed={lang === l}
-            >
-              {l.toUpperCase()}
-            </button>
-          ))}
-        </div>
+      <div>
+        <h1 className="text-xl font-semibold text-zinc-100">Create your account</h1>
+        <p className="text-sm text-zinc-500 mt-1">Start your journey today</p>
       </div>
 
       {/* Role selector */}
-      <div role="group" aria-label={t.selectRole} className="space-y-2">
-        <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">{t.selectRole}</p>
+      <div role="group" aria-label="I am a…" className="space-y-2">
+        <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">I am a…</p>
         <div className="grid grid-cols-2 gap-2">
           {roles.map(({ id, icon, label, desc }) => {
             const active = role === id;
@@ -200,9 +147,7 @@ export default function RegisterPage() {
                     : "bg-zinc-800/60 border-zinc-700/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
                 }`}
               >
-                <span
-                  className={`transition-colors duration-200 ${active ? "text-violet-400" : "text-zinc-500"}`}
-                >
+                <span className={`transition-colors duration-200 ${active ? "text-violet-400" : "text-zinc-500"}`}>
                   {icon}
                 </span>
                 <span className="font-medium text-sm leading-none">{label}</span>
@@ -220,12 +165,12 @@ export default function RegisterPage() {
         <Input
           id="username"
           type="text"
-          label={t.username}
+          label="Username"
           placeholder="djsolar"
           autoComplete="username"
           required
           pattern="[a-zA-Z0-9_]+"
-          helperText={t.usernameHint}
+          helperText="Letters, numbers and underscores only"
           value={username}
           onChange={(e) => setUsername(e.target.value.trim())}
         />
@@ -233,7 +178,7 @@ export default function RegisterPage() {
         <Input
           id="email"
           type="email"
-          label={t.email}
+          label="Email"
           placeholder="you@example.com"
           autoComplete="email"
           required
@@ -245,11 +190,11 @@ export default function RegisterPage() {
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            label={t.password}
+            label="Password"
             placeholder="••••••••"
             autoComplete="new-password"
             required
-            helperText={t.passwordHint}
+            helperText="At least 8 characters"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onPaste={(e) => {
@@ -261,7 +206,7 @@ export default function RegisterPage() {
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             className="absolute right-3 bottom-[30px] text-zinc-500 hover:text-zinc-300 transition-colors p-1 rounded"
-            aria-label={showPassword ? t.hidePassword : t.showPassword}
+            aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? (
               <EyeOff className="w-4 h-4" aria-hidden="true" />
@@ -282,28 +227,28 @@ export default function RegisterPage() {
         )}
 
         <Button type="submit" size="lg" loading={loading} className="w-full">
-          {loading ? t.creating : t.createAccountBtn}
+          {loading ? "Creating…" : "Create account"}
         </Button>
       </form>
 
       <p className="text-center text-sm text-zinc-500">
-        {t.haveAccount}{" "}
+        Already have an account?{" "}
         <Link
           href="/login"
           className="text-violet-400 hover:text-violet-300 transition-colors font-medium"
         >
-          {t.signInLink}
+          Sign in
         </Link>
       </p>
 
       <p className="text-center text-xs text-zinc-600">
-        {t.agreePrefix}{" "}
+        By creating an account you agree to our{" "}
         <Link href="/terms" className="underline underline-offset-2 hover:text-zinc-400 transition-colors">
-          {t.terms}
+          Terms
         </Link>{" "}
-        {t.and}{" "}
+        and{" "}
         <Link href="/privacy" className="underline underline-offset-2 hover:text-zinc-400 transition-colors">
-          {t.privacy}
+          Privacy Policy
         </Link>
       </p>
     </div>

@@ -6,12 +6,9 @@ import { useSignIn } from "@clerk/nextjs";
 import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useLanguage, authTranslations } from "@/hooks/useLanguage";
 
 export default function LoginPage() {
   const { signIn, setActive, isLoaded } = useSignIn();
-  const { lang, setLang } = useLanguage();
-  const t = authTranslations[lang];
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,18 +28,11 @@ export default function LoginPage() {
         await setActive({ session: result.createdSessionId });
         window.location.href = "/";
       } else {
-        setError(
-          lang === "tr"
-            ? "Giriş tamamlanamadı. Email doğrulamanı kontrol et."
-            : "Sign in incomplete. Please check your email for verification."
-        );
+        setError("Sign in incomplete. Please check your email for verification.");
       }
     } catch (err: unknown) {
       const clerkErr = err as { errors?: { longMessage?: string }[] };
-      setError(
-        clerkErr.errors?.[0]?.longMessage ??
-          (lang === "tr" ? "Giriş başarısız. Tekrar dene." : "Sign in failed. Please try again.")
-      );
+      setError(clerkErr.errors?.[0]?.longMessage ?? "Sign in failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -50,43 +40,16 @@ export default function LoginPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header row: title + language switcher */}
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-100">{t.welcome}</h1>
-          <p className="text-sm text-zinc-500 mt-1">{t.welcomeSub}</p>
-        </div>
-
-        {/* Language toggle */}
-        <div
-          role="group"
-          aria-label="Language"
-          className="flex items-center bg-zinc-800 border border-zinc-700/50 rounded-lg p-0.5 shrink-0 mt-0.5"
-        >
-          {(["en", "tr"] as const).map((l) => (
-            <button
-              key={l}
-              type="button"
-              onClick={() => setLang(l)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all duration-150 ${
-                lang === l
-                  ? "bg-violet-600 text-white shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
-              }`}
-              aria-pressed={lang === l}
-            >
-              {l.toUpperCase()}
-            </button>
-          ))}
-        </div>
+      <div>
+        <h1 className="text-xl font-semibold text-zinc-100">Welcome back</h1>
+        <p className="text-sm text-zinc-500 mt-1">Sign in to continue your journey</p>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <Input
           id="email"
           type="email"
-          label={t.email}
+          label="Email"
           placeholder="you@example.com"
           autoComplete="email"
           required
@@ -98,7 +61,7 @@ export default function LoginPage() {
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
-            label={t.password}
+            label="Password"
             placeholder="••••••••"
             autoComplete="current-password"
             required
@@ -113,7 +76,7 @@ export default function LoginPage() {
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             className="absolute right-3 bottom-[11px] text-zinc-500 hover:text-zinc-300 transition-colors p-1 rounded"
-            aria-label={showPassword ? t.hidePassword : t.showPassword}
+            aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? (
               <EyeOff className="w-4 h-4" aria-hidden="true" />
@@ -138,22 +101,22 @@ export default function LoginPage() {
             href="/forgot-password"
             className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
           >
-            {t.forgotPassword}
+            Forgot password?
           </Link>
         </div>
 
         <Button type="submit" size="lg" loading={loading} className="w-full">
-          {loading ? t.signingIn : t.signIn}
+          {loading ? "Signing in…" : "Sign in"}
         </Button>
       </form>
 
       <p className="text-center text-sm text-zinc-500">
-        {t.noAccount}{" "}
+        Don&apos;t have an account?{" "}
         <Link
           href="/register"
           className="text-violet-400 hover:text-violet-300 transition-colors font-medium"
         >
-          {t.createOne}
+          Create one
         </Link>
       </p>
     </div>

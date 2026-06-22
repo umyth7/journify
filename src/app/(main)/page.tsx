@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { SetCard } from "@/components/set/SetCard";
 import { MoodFilter, type MoodId } from "@/components/set/MoodFilter";
-import { BetaSignupForm } from "@/components/ui/BetaSignupForm";
 import type { Set } from "@/types";
 
 // ── Mood theme tokens ─────────────────────────────────────────────────────────
@@ -151,14 +150,6 @@ export default function FeedPage() {
             Pick a mood — find live sets that match your emotional state.
           </p>
         </div>
-      </section>
-
-      {/* ── Beta signup ───────────────────────────────────────────────────────── */}
-      <section aria-label="Join the beta" className="max-w-xl mx-auto">
-        <p className="text-xs text-zinc-600 uppercase tracking-widest font-medium text-center mb-3">
-          Early access
-        </p>
-        <BetaSignupForm />
       </section>
 
       {/* ── Mood Filter ───────────────────────────────────────────────────────── */}
