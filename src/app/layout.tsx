@@ -70,6 +70,13 @@ export const metadata: Metadata = {
   },
 };
 
+// Analytics — Umami (self-hosted) or Plausible, configured via env vars.
+// Set NEXT_PUBLIC_UMAMI_WEBSITE_ID + NEXT_PUBLIC_UMAMI_URL for Umami,
+// or NEXT_PUBLIC_PLAUSIBLE_DOMAIN for Plausible.
+const umamiWebsiteId = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID;
+const umamiUrl = process.env.NEXT_PUBLIC_UMAMI_URL ?? "https://analytics.umami.is/script.js";
+const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -83,6 +90,22 @@ export default function RootLayout({
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_SCHEMA) }}
           />
+          {/* Umami analytics */}
+          {umamiWebsiteId && (
+            <script
+              defer
+              src={umamiUrl}
+              data-website-id={umamiWebsiteId}
+            />
+          )}
+          {/* Plausible analytics */}
+          {plausibleDomain && (
+            <script
+              defer
+              data-domain={plausibleDomain}
+              src="https://plausible.io/js/script.js"
+            />
+          )}
         </head>
         <body className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} antialiased`}>
           {children}

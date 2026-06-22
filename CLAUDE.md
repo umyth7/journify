@@ -51,7 +51,7 @@ Claude source/journey klasorü içerisinde her belgeyi yazabilir izin almasına 
 | Phase 3 | 2 hafta | Profil & Sosyal — like, follow, paylaşım | ✅ Tamamlandı |
 | Phase 4 | 1.5 hafta | Ana sayfa & Keşif — feed, arama, trending | ✅ Tamamlandı |
 | Phase 5 | 2 hafta | Güvenlik, optimizasyon, test | ✅ Tamamlandı |
-| Phase 6 | 2 hafta | Launch — beta, email bildirimleri, analytics | ❌ Başlanmadı |
+| Phase 6 | 2 hafta | Launch — beta, email bildirimleri, analytics | 🔄 Devam Ediyor |
 
 Toplam: ~14 hafta (haftada 4 gün × 8 saat = 32 saat/hafta)
 
@@ -72,10 +72,11 @@ Toplam: ~14 hafta (haftada 4 gün × 8 saat = 32 saat/hafta)
 - ✅ Input sanitization — title (120 char), description (2000), genre (80), bio (300), displayName (60), sosyal linkler (200) max-length + trim + boş kontrol
 - ✅ Next.js Image remote domains — R2 (`*.r2.dev`, `senssetify.com`), Clerk CDN whitelist
 
-### Phase 6 — Yapılacaklar
-- [ ] Beta email listesi
-- [ ] Analytics (Plausible veya Umami)
-- [ ] Email bildirimleri (follow, yeni set)
+### Phase 6 — Tamamlananlar / Yapılacaklar
+- ✅ Beta email listesi — `BetaSubscriber` Prisma modeli + migration (`20260622000000_add_beta_email`); `POST /api/beta` (email kayıt, duplicate kontrol); `GET /api/beta` (admin, `x-admin-secret` header); `BetaSignupForm` bileşeni (optimistic UI, success/already state)
+- ✅ Analytics — `NEXT_PUBLIC_UMAMI_WEBSITE_ID` + `NEXT_PUBLIC_UMAMI_URL` veya `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` env var; root layout'a koşullu `<script defer />` eklendi; zero-dependency (env ayarlanmazsa script eklenmez)
+- ✅ Email bildirimleri — `src/lib/email.ts` (Resend REST API, SDK gerektirmez; `RESEND_API_KEY` yoksa no-op); `sendFollowNotification` + `sendNewSetNotification`; follow endpoint'inde otomatik tetikleme (24h rate-limit + `EmailNotificationLog`); set READY olduğunda follower bildirimi (`/api/sets/[id]/status` PATCH + multipart complete); `EmailNotificationLog` Prisma modeli (duplicate koruması)
+- [ ] Vercel env vars ayarlanacak: `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_UMAMI_WEBSITE_ID` (veya `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`), `ADMIN_SECRET`
 
 ## Temel Özellikler
 - Set yükleme: min 40 dk, max 3 saat, sadece audio; chunked multipart upload
@@ -129,6 +130,35 @@ Genre etiketleri yerine **duygusal durumlar** ön plana çıkarılır.
 ---
 
 ## Geliştirme Günlüğü
+
+### 2026-06-22 — Phase 6 Launch: Beta listesi + Analytics + Email bildirimleri
+
+#### ✅ Tamamlananlar
+- **Beta email listesi** — `BetaSubscriber` Prisma modeli + `20260622000000_add_beta_email` migration; `POST /api/beta` (email + isim kayıt, duplicate 200 döner, invalid email 400); `GET /api/beta` (admin endpoint — `x-admin-secret` header ile korumalı, tüm kayıtları listeler); `BetaSignupForm` client bileşeni (`src/components/ui/BetaSignupForm.tsx` — success/already/error state, Tailwind, Lucide); `/api/beta` middleware'de public route olarak eklendi
+- **Analytics** — root layout (`src/app/layout.tsx`) güncellendi: `NEXT_PUBLIC_UMAMI_WEBSITE_ID` + `NEXT_PUBLIC_UMAMI_URL` için Umami `<script defer />` desteği; `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` için Plausible `<script defer />` desteği; env var yoksa script hiç eklenmez (sıfır overhead)
+- **Email bildirimleri** — `src/lib/email.ts` oluşturuldu: Resend REST API ile gönderim (npm paketi gerektirmez — sadece `fetch`); `RESEND_API_KEY` yoksa development'ta log, production'da no-op; `sendFollowNotification` + `sendNewSetNotification` (HTML email şablonları, dark theme); follow endpoint güncellendi (`/api/users/[username]/follow/route.ts`) — yeni follow'da hedef kullanıcıya bildirim, 24h deduplicate; set status PATCH endpoint güncellendi (`/api/sets/[id]/status/route.ts`) — worker READY gönderdiğinde follower'lara toplu bildirim; multipart complete'de worker yoksa anlık bildirim; `EmailNotificationLog` modeli ile duplicate koruması
+- **Prisma** — `BetaSubscriber` + `EmailNotificationLog` modelleri şemaya eklendi; `npx prisma generate --no-engine` başarıyla çalıştırıldı
+- **TypeScript** — sıfır hata (`npx tsc --noEmit` temiz)
+- **ESLint** — sıfır hata (`npm run lint` temiz)
+
+#### 🔄 Bekleyenler — Vercel / Railway env vars
+```
+RESEND_API_KEY=re_...          # Resend hesabından (resend.com)
+EMAIL_FROM=Journey <noreply@senssetify.com>
+ADMIN_SECRET=...               # /api/beta GET için güçlü secret
+NEXT_PUBLIC_UMAMI_WEBSITE_ID=... # Umami dashboard'dan (opsiyonel)
+NEXT_PUBLIC_UMAMI_URL=https://... # Kendi Umami instance URL (opsiyonel)
+# veya
+NEXT_PUBLIC_PLAUSIBLE_DOMAIN=senssetify.com  # Plausible için (opsiyonel)
+```
+
+#### ⚠️ Railway Migration Notu
+`prisma/migrations/20260622000000_add_beta_email/migration.sql` Railway PostgreSQL'e uygulanmalı:
+```
+npx prisma migrate deploy
+```
+
+---
 
 ### 2026-06-22 — Comments sistemi + Search mood filtresi + Profil beğeniler sekmesi
 
