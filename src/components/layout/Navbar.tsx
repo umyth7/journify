@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Radio, Search, Upload, User } from "lucide-react";
+import { Radio, Search, Upload, User, LayoutDashboard } from "lucide-react";
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 
 export function Navbar() {
@@ -78,6 +78,11 @@ export function Navbar() {
                     label="Profilim"
                     labelIcon={<User className="w-4 h-4" />}
                     href={`/profile/${user?.username}`}
+                  />
+                  <UserButton.Link
+                    label="Dashboard"
+                    labelIcon={<LayoutDashboard className="w-4 h-4" />}
+                    href="/dashboard"
                   />
                 </UserButton.MenuItems>
               </UserButton>
