@@ -113,15 +113,6 @@ model Comment {
   @@index([setId, createdAt])
 }
 
-model BetaSubscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-
-  @@index([createdAt])
-}
-
 model EmailNotificationLog {
   id        String   @id @default(cuid())
   type      String   // "follow" | "new_set"

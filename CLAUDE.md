@@ -73,13 +73,12 @@ Toplam: ~14 hafta (haftada 4 gün × 8 saat = 32 saat/hafta)
 - ✅ Next.js Image remote domains — R2 (`*.r2.dev`, `senssetify.com`), Clerk CDN whitelist
 
 ### Phase 6 — Tamamlananlar / Yapılacaklar
-- ✅ Beta email listesi — `BetaSubscriber` Prisma modeli + migration (`20260622000000_add_beta_email`); `POST /api/beta` (email kayıt, duplicate kontrol); `GET /api/beta` (admin, `x-admin-secret` header); `BetaSignupForm` bileşeni (optimistic UI, success/already state)
+- ~~Beta email listesi~~ — **KALDIRILDI (2026-06-23):** `BetaSignupForm`, `BetaSubscriber` Prisma modeli, `/api/beta` endpoint proje planından çıkarıldı
 - ✅ Analytics — `NEXT_PUBLIC_UMAMI_WEBSITE_ID` + `NEXT_PUBLIC_UMAMI_URL` veya `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` env var; root layout'a koşullu `<script defer />` eklendi; zero-dependency (env ayarlanmazsa script eklenmez)
 - ✅ Email bildirimleri — `src/lib/email.ts` (Resend REST API, SDK gerektirmez; `RESEND_API_KEY` yoksa no-op); `sendFollowNotification` + `sendNewSetNotification`; follow endpoint'inde otomatik tetikleme (24h rate-limit + `EmailNotificationLog`); set READY olduğunda follower bildirimi (`/api/sets/[id]/status` PATCH + multipart complete); `EmailNotificationLog` Prisma modeli (duplicate koruması)
-- ✅ BetaSignupForm ana sayfaya entegre edildi — hero ile mood filter arasına "Early access" CTA olarak eklendi
 - ✅ Play count takibi — `Set` modeline `playsCount Int @default(0)` eklendi; `POST /api/sets/[id]/play` endpoint (anonim + kimlikli); Zustand player store'da `play()` çağrısında otomatik fire-and-forget; migration: `20260622010000_add_plays_count`
 - ✅ Search API isLiked fix — `/api/search` artık kimlik doğrulamalı kullanıcı için doğru `isLiked` döndürüyor (eskiden hep `false` dönüyordu)
-- [ ] Vercel env vars ayarlanacak: `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_UMAMI_WEBSITE_ID` (veya `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`), `ADMIN_SECRET`
+- [ ] Vercel env vars ayarlanacak: `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_UMAMI_WEBSITE_ID` (veya `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`)`
 
 ## Temel Özellikler
 - Set yükleme: min 40 dk, max 3 saat, sadece audio; chunked multipart upload
@@ -133,6 +132,18 @@ Genre etiketleri yerine **duygusal durumlar** ön plana çıkarılır.
 ---
 
 ## Geliştirme Günlüğü
+
+### 2026-06-23 — Beta signup sistemi kaldırıldı
+
+#### Kaldırılanlar
+- `src/components/ui/BetaSignupForm.tsx` — bileşen silindi
+- `src/app/api/beta/route.ts` — `POST /api/beta` ve `GET /api/beta` endpoint'leri silindi
+- `prisma/schema.prisma` — `BetaSubscriber` modeli kaldırıldı; `prisma generate --no-engine` çalıştırıldı
+- `src/middleware.ts` — `/api/beta(.*)` public route kaydı kaldırıldı
+- `src/app/(main)/page.tsx` — `BetaSignupForm` import ve "Early access" CTA bölümü kaldırıldı
+- CLAUDE.md Phase 6 listesi güncellendi (madde ~~üstü çizili~~ olarak işaretlendi)
+
+---
 
 ### 2026-06-23 — BetaSignupForm home page fix + Play count UI
 
