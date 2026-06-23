@@ -134,6 +134,24 @@ Genre etiketleri yerine **duygusal durumlar** ön plana çıkarılır.
 
 ## Geliştirme Günlüğü
 
+### 2026-06-23 — BetaSignupForm home page fix + Play count UI
+
+#### Boşluk Raporu (Kod Tabanı vs CLAUDE.md)
+- CLAUDE.md "BetaSignupForm ana sayfaya entegre edildi" diyordu ancak `src/app/(main)/page.tsx` incelendiğinde bileşen import edilmemişti ve render edilmiyordu. Kritik launch eksikliği.
+- `playsCount` Prisma şemasına ve `Set` tipine eklenmişti, `/api/sets/[id]/play` endpoint yazılmıştı, Zustand store güncellenmişti — ancak UI'da hiçbir yerde gösterilmiyordu (SetCard ve set detay sayfasında).
+- Tek eksik [ ] madde olan "Vercel env vars ayarlanacak" gerçek bir kod değişikliği değil, deployment adımı — atlandı.
+
+#### Tamamlananlar
+- **BetaSignupForm ana sayfaya eklendi** — `src/app/(main)/page.tsx`'e `BetaSignupForm` import edildi; hero ve MoodFilter arasına "Early access" label + `BetaSignupForm` bileşeni eklendi (`max-w-xl mx-auto` ile ortalı, mood temasıyla uyumlu label rengi)
+- **Play count UI** — `src/components/set/SetCard.tsx`: `Headphones` icon eklendi; `playsCount > 0` iken genre badge yanında play sayısı gösteriliyor; `src/app/(main)/sets/[id]/page.tsx`: set detay sayfasına `Headphones` icon + `{set.playsCount.toLocaleString()} plays` eklendi (genre/duration/mood chip satırına)
+- **TypeScript** — sıfır hata (`npx tsc --noEmit` temiz)
+- **ESLint** — sıfır hata (`npm run lint` temiz)
+
+#### Bekleyenler
+- Vercel env vars: `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_UMAMI_WEBSITE_ID`, `ADMIN_SECRET` (deployment adımı, kod değişikliği gerektirmiyor)
+
+---
+
 ### 2026-06-22 — Play count + Search isLiked fix + BetaSignupForm CTA
 
 #### Boşluk Raporu (Kod Tabanı vs CLAUDE.md)

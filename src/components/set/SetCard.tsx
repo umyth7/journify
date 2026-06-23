@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Play, Clock } from "lucide-react";
+import { Play, Clock, Headphones } from "lucide-react";
 import { usePlayerStore } from "@/store/player";
 import { formatDuration } from "@/lib/utils";
 import { LikeButton } from "@/components/set/LikeButton";
@@ -117,9 +117,17 @@ export function SetCard({ set }: SetCardProps) {
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-zinc-800 text-zinc-400 border border-zinc-700/50">
             {set.genre}
           </span>
-          <span className="text-xs text-zinc-600 tabular-nums">
-            {set.likesCount.toLocaleString()} likes
-          </span>
+          <div className="flex items-center gap-2">
+            {(set.playsCount ?? 0) > 0 && (
+              <span className="flex items-center gap-0.5 text-xs text-zinc-600 tabular-nums">
+                <Headphones className="w-3 h-3" aria-hidden="true" />
+                {(set.playsCount ?? 0).toLocaleString()}
+              </span>
+            )}
+            <span className="text-xs text-zinc-600 tabular-nums">
+              {set.likesCount.toLocaleString()} likes
+            </span>
+          </div>
         </div>
       </div>
     </article>

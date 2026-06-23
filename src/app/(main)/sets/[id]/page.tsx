@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { Clock, Music2 } from "lucide-react";
+import { Clock, Music2, Headphones } from "lucide-react";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { formatDuration } from "@/lib/utils";
@@ -151,6 +151,12 @@ export default async function SetDetailPage({ params }: { params: { id: string }
               <Clock className="w-3 h-3" />
               {formatDuration(set.duration)}
             </span>
+            {set.playsCount > 0 && (
+              <span className="flex items-center gap-1 text-xs text-zinc-500">
+                <Headphones className="w-3 h-3" />
+                {set.playsCount.toLocaleString()} plays
+              </span>
+            )}
           </div>
 
           <h1 className="text-2xl font-bold text-zinc-100 leading-tight">{set.title}</h1>
