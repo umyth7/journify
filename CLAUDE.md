@@ -51,7 +51,8 @@ Claude source/journey klasorü içerisinde her belgeyi yazabilir izin almasına 
 | Phase 3 | 2 hafta | Profil & Sosyal — like, follow, paylaşım | ✅ Tamamlandı |
 | Phase 4 | 1.5 hafta | Ana sayfa & Keşif — feed, arama, trending | ✅ Tamamlandı |
 | Phase 5 | 2 hafta | Güvenlik, optimizasyon, test | ✅ Tamamlandı |
-| Phase 6 | 2 hafta | Launch — beta, email bildirimleri, analytics | 🔄 Devam Ediyor |
+| Phase 6 | 2 hafta | Launch — beta, email bildirimleri, analytics | ✅ Tamamlandı |
+| Phase 7 | devam | Artist Dashboard — istatistikler, set yönetimi | 🔄 Devam Ediyor |
 
 Toplam: ~14 hafta (haftada 4 gün × 8 saat = 32 saat/hafta)
 
@@ -78,7 +79,15 @@ Toplam: ~14 hafta (haftada 4 gün × 8 saat = 32 saat/hafta)
 - ✅ Email bildirimleri — `src/lib/email.ts` (Resend REST API, SDK gerektirmez; `RESEND_API_KEY` yoksa no-op); `sendFollowNotification` + `sendNewSetNotification`; follow endpoint'inde otomatik tetikleme (24h rate-limit + `EmailNotificationLog`); set READY olduğunda follower bildirimi (`/api/sets/[id]/status` PATCH + multipart complete); `EmailNotificationLog` Prisma modeli (duplicate koruması)
 - ✅ Play count takibi — `Set` modeline `playsCount Int @default(0)` eklendi; `POST /api/sets/[id]/play` endpoint (anonim + kimlikli); Zustand player store'da `play()` çağrısında otomatik fire-and-forget; migration: `20260622010000_add_plays_count`
 - ✅ Search API isLiked fix — `/api/search` artık kimlik doğrulamalı kullanıcı için doğru `isLiked` döndürüyor (eskiden hep `false` dönüyordu)
-- [ ] Vercel env vars ayarlanacak: `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_UMAMI_WEBSITE_ID` (veya `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`)`
+- [ ] Vercel env vars ayarlanacak: `RESEND_API_KEY`, `EMAIL_FROM`, `NEXT_PUBLIC_UMAMI_WEBSITE_ID` (veya `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`)
+
+### Phase 7 — Artist Dashboard
+- ✅ `GET /api/dashboard` — toplam plays, likes, followers, set sayısı + per-set breakdown
+- ✅ `PATCH /api/sets/[id]` — başlık/açıklama/genre/mood düzenleme (owner-only, input validation)
+- ✅ `DELETE /api/sets/[id]` — DB + R2 ses & kapak silme (owner-only, cascade)
+- ✅ `/dashboard` sayfası — 4 stat kartı (plays, likes, followers, set sayısı) + set listesi (server component)
+- ✅ `DashboardClient` — inline edit modal (mood chip picker dahil), silme onay modalı, optimistic UI
+- ✅ Navbar — UserButton menüsüne Dashboard linki eklendi (`LayoutDashboard` icon)
 
 ## Temel Özellikler
 - Set yükleme: min 40 dk, max 3 saat, sadece audio; chunked multipart upload
@@ -132,6 +141,18 @@ Genre etiketleri yerine **duygusal durumlar** ön plana çıkarılır.
 ---
 
 ## Geliştirme Günlüğü
+
+### 2026-06-23 — Artist Dashboard (Phase 7)
+
+#### Tamamlananlar
+- **`GET /api/dashboard`** — kimlik doğrulamalı kullanıcı için toplam plays/likes/followers/set sayısı + her set için detaylı breakdown
+- **`PATCH /api/sets/[id]`** — set metadata düzenleme (title, description, genre, mood); owner kontrolü, input validation
+- **`DELETE /api/sets/[id]`** — set silme: DB cascade + R2'den ses ve kapak dosyası `DeleteObjectCommand` ile temizleniyor; `Promise.allSettled` ile R2 hatası DB silmeyi engellemiyor
+- **`/dashboard` sayfası** — server component; 4 istatistik kartı (Headphones/Heart/Users/Music ikonlu); `DashboardClient` set listesiyle
+- **`DashboardClient`** — set satırları (cover thumbnail, play/like sayıları, status badge); edit modal (title/genre/mood chip picker/description); delete onay modalı; optimistic state güncelleme
+- **Navbar** — `UserButton.MenuItems`'a Dashboard linki (`LayoutDashboard` icon)
+
+---
 
 ### 2026-06-23 — Beta signup sistemi kaldırıldı
 
