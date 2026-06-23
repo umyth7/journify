@@ -1,0 +1,275 @@
+{
+  "domain": "www.senssetify.com",
+  "audit_date": "2026-06-22",
+  "summary": {
+    "health_score": 42,
+    "business_type": "Music Discovery SaaS — Underground Electronic Live Sets Platform",
+    "top_findings": [
+      "No robots.txt file (404) — search engines crawling blind",
+      "No sitemap.xml (404) — zero indexation guidance",
+      "No canonical tags on any page — duplicate content risk",
+      "No Open Graph or Twitter Card tags on most pages",
+      "Auth pages (/login, /register) publicly indexable with no noindex"
+    ],
+    "quick_wins": [
+      "Add robots.txt with sitemap pointer (< 1 hour)",
+      "Generate sitemap.xml via Next.js app/sitemap.ts (< 2 hours)",
+      "Add canonical tags to layout.tsx (< 1 hour)",
+      "Add noindex to /login and /register pages (< 30 min)",
+      "Add Open Graph tags to homepage and static pages (< 2 hours)"
+    ]
+  },
+  "categories": [
+    {
+      "name": "Technical SEO",
+      "score": 35,
+      "what_works": [
+        "HTTPS enforced site-wide",
+        "HSTS header present (max-age=63072000)",
+        "HTML lang attribute set to 'en'",
+        "Vercel CDN caching working (HIT responses)",
+        "favicon.ico present and accessible",
+        "Mobile viewport meta tag present",
+        "Server returns correct HTTP status codes"
+      ],
+      "findings": [
+        {
+          "title": "robots.txt missing (404)",
+          "severity": "Critical",
+          "description": "GET /robots.txt returns 404. Search engine crawlers have no guidance on which pages to crawl or avoid. This also means no sitemap pointer for Googlebot.",
+          "recommendation": "Create public/robots.txt with: User-agent: * / Allow: / / Sitemap: https://www.senssetify.com/sitemap.xml"
+        },
+        {
+          "title": "sitemap.xml missing (404)",
+          "severity": "Critical",
+          "description": "GET /sitemap.xml returns 404. Google has no indexation roadmap. Public pages (/login, /register, /search, future public set pages) are undiscoverable.",
+          "recommendation": "Create app/sitemap.ts in Next.js 14 App Router to auto-generate sitemap. Include: /, /login, /register, /search, and dynamic /sets/[id] pages with status=READY."
+        },
+        {
+          "title": "No canonical tags",
+          "severity": "High",
+          "description": "No <link rel='canonical'> detected on homepage, /login, /search, or other pages. Risk of duplicate content if pages are accessible via multiple URLs (www vs non-www, trailing slash variants).",
+          "recommendation": "Add canonical to root layout.tsx using Next.js metadata API: metadata.alternates.canonical = '/' and per-page overrides."
+        },
+        {
+          "title": "Auth pages publicly indexable",
+          "severity": "High",
+          "description": "/login and /register return 200 with no noindex directive. These pages consume crawl budget and may appear in search results with low-value content.",
+          "recommendation": "Add export const metadata = { robots: { index: false } } to app/(auth)/login/page.tsx and app/(auth)/register/page.tsx."
+        },
+        {
+          "title": "Duplicate title tags across all pages",
+          "severity": "High",
+          "description": "Every page (homepage, /login, /search, /register) shares the same title 'Senssetify — Music is a Journey'. Google treats this as a low-quality signal and may rewrite titles.",
+          "recommendation": "Add unique titles per route via generateMetadata. Pattern: '[Page Name] | Senssetify' for static pages, dynamic titles for set/profile pages."
+        },
+        {
+          "title": "No security headers (CSP, X-Frame-Options)",
+          "severity": "Medium",
+          "description": "Content-Security-Policy and X-Frame-Options headers not detected. HSTS is present. Missing headers are a minor ranking signal and a security concern.",
+          "recommendation": "Add security headers in next.config.mjs headers() function."
+        }
+      ]
+    },
+    {
+      "name": "Content Quality",
+      "score": 58,
+      "what_works": [
+        "Homepage copy is emotionally resonant and differentiated ('How do you feel right now?')",
+        "Mood category descriptions are human and specific ('Time suspends', 'Chest opens', 'Gravity fades')",
+        "Meta description on homepage is present and compelling",
+        "Brand tagline 'Music is a Journey' is consistent"
+      ],
+      "findings": [
+        {
+          "title": "Most content behind authentication wall",
+          "severity": "High",
+          "description": "Set detail pages (/sets/[id]), profile pages (/profile/[username]) appear to require Clerk authentication. Googlebot cannot crawl and index this content, severely limiting organic discovery of individual sets and artists.",
+          "recommendation": "Make set detail pages (/sets/[id]) and profile pages publicly accessible without login. This is the most impactful SEO improvement for organic reach. Guard only upload/like/follow actions."
+        },
+        {
+          "title": "No meta descriptions on /login, /search, /register",
+          "severity": "Medium",
+          "description": "Secondary pages have no unique meta description. Google will auto-generate one from page content, which is often low quality for auth pages.",
+          "recommendation": "Add per-page metadata with description to each route's generateMetadata or static metadata export."
+        },
+        {
+          "title": "No blog or editorial content",
+          "severity": "Low",
+          "description": "Zero editorial content (artist interviews, genre guides, mood explanations). This limits long-tail keyword acquisition and E-E-A-T signals.",
+          "recommendation": "Phase 6+ consideration: add a /blog or /discover section with mood guides and artist spotlights."
+        }
+      ]
+    },
+    {
+      "name": "On-Page SEO",
+      "score": 38,
+      "what_works": [
+        "H1 on homepage ('How do you feel right now?') is unique and keyword-relevant",
+        "Homepage meta description present and high quality",
+        "Heading hierarchy present on homepage (H1 → H2)"
+      ],
+      "findings": [
+        {
+          "title": "Homepage missing Open Graph tags",
+          "severity": "High",
+          "description": "No og:title, og:description, og:image, og:type, or og:url detected on homepage. Social shares (Twitter/X, Discord, WhatsApp) will show unstyled link previews.",
+          "recommendation": "Add to root layout.tsx metadata: openGraph: { title, description, url, siteName, type: 'website', images: [{ url: '/og-image.jpg', width: 1200, height: 630 }] }"
+        },
+        {
+          "title": "No Twitter Card tags",
+          "severity": "High",
+          "description": "No twitter:card, twitter:title, or twitter:image tags. Twitter/X link previews will be text-only.",
+          "recommendation": "Add twitter: { card: 'summary_large_image', title, description, images } to layout metadata."
+        },
+        {
+          "title": "/search page has no unique title or meta",
+          "severity": "Medium",
+          "description": "Search page inherits the root layout title/description. Not indexable for search-intent keywords.",
+          "recommendation": "Add metadata export: title: 'Search Live Sets | Senssetify', description: 'Search thousands of live DJ sets by mood, artist, or genre.'"
+        }
+      ]
+    },
+    {
+      "name": "Schema / Structured Data",
+      "score": 8,
+      "what_works": [],
+      "findings": [
+        {
+          "title": "No structured data anywhere",
+          "severity": "High",
+          "description": "Zero JSON-LD schema detected on any page. Missing: WebSite schema (homepage, enables sitelinks search box), MusicRecording/CreativeWork for set pages, Person schema for artist profiles.",
+          "recommendation": "Add WebSite schema to layout.tsx. Add MusicRecording or CreativeWork schema to /sets/[id] generateMetadata. Add Person schema to /profile/[username]."
+        },
+        {
+          "title": "No BreadcrumbList schema",
+          "severity": "Low",
+          "description": "Set detail and profile pages have no breadcrumb schema. Breadcrumbs improve SERP display.",
+          "recommendation": "Add BreadcrumbList JSON-LD to set and profile pages."
+        }
+      ]
+    },
+    {
+      "name": "Performance (Core Web Vitals)",
+      "score": 62,
+      "what_works": [
+        "Vercel CDN global edge network — low TTFB from Frankfurt (Age headers confirm edge caching)",
+        "Next.js 14 App Router with SSR/SSG — pages pre-rendered",
+        "Static asset caching (CSS, fonts, JS chunks)",
+        "Font preloading with rel=preload for WOFF/WOFF2",
+        "Image optimization via Next.js Image component where used"
+      ],
+      "findings": [
+        {
+          "title": "Large JS bundle with many async chunks",
+          "severity": "Medium",
+          "description": "Homepage HTML loads 10+ async JavaScript chunks including Clerk (clerk.browser.js external CDN load). Clerk JS is ~250KB and loaded cross-origin, potentially delaying interactivity.",
+          "recommendation": "Verify Clerk JS loads async (it does — async attribute present). Consider lazy-loading UserButton component. Run Lighthouse to confirm actual INP/TBT impact."
+        },
+        {
+          "title": "No explicit Cache-Control for immutable assets",
+          "severity": "Low",
+          "description": "Cache-Control: public, max-age=0, must-revalidate on HTML responses (correct). Verify /_next/static/* assets have long max-age (Next.js handles this automatically with content hashing).",
+          "recommendation": "Run Lighthouse or WebPageTest to confirm static asset caching. This is likely handled correctly by Vercel + Next.js."
+        }
+      ]
+    },
+    {
+      "name": "AI Search Readiness",
+      "score": 18,
+      "what_works": [
+        "Clear brand identity and unique value proposition",
+        "Mood-based discovery concept is novel and citable"
+      ],
+      "findings": [
+        {
+          "title": "No llms.txt file",
+          "severity": "Medium",
+          "description": "No /llms.txt found. AI crawlers (Claude, ChatGPT, Perplexity) have no structured guidance on site content and indexation preferences.",
+          "recommendation": "Create public/llms.txt with site description, key sections, and content access policy."
+        },
+        {
+          "title": "No AI-citable public content",
+          "severity": "High",
+          "description": "Content discovery pages (/sets/[id], /profile/[username]) appear to redirect to login for unauthenticated users. AI crawlers cannot index set or artist content.",
+          "recommendation": "Same as Content Quality finding — make set and profile pages publicly accessible. This is the single highest-leverage SEO action."
+        }
+      ]
+    },
+    {
+      "name": "Images",
+      "score": 45,
+      "what_works": [
+        "favicon.ico present (200 OK)",
+        "Next.js Image component used for cover art (with width/height optimization)"
+      ],
+      "findings": [
+        {
+          "title": "No OG image for social sharing",
+          "severity": "High",
+          "description": "No og:image tag on any page. Social shares show blank preview images. This significantly reduces click-through from Discord, Twitter/X, and WhatsApp shares.",
+          "recommendation": "Create a static /og-image.jpg (1200×630) for the homepage. For /sets/[id] pages, generate dynamic OG images using Next.js @vercel/og or use set cover art URL."
+        },
+        {
+          "title": "No apple-touch-icon",
+          "severity": "Low",
+          "description": "No apple-touch-icon link tag detected. iOS home screen saves and PWA installs show blank icons.",
+          "recommendation": "Add 180×180 apple-touch-icon to public/ and reference in layout metadata."
+        }
+      ]
+    }
+  ],
+  "action_plan": {
+    "phases": [
+      {
+        "name": "Phase 1: Critical Fixes",
+        "timeframe": "Week 1 (1-2 days total)",
+        "items": [
+          "Create public/robots.txt (30 min)",
+          "Create app/sitemap.ts — Next.js dynamic sitemap (2 hours)",
+          "Add noindex to /login and /register pages (30 min)",
+          "Add canonical link to root layout.tsx metadata (30 min)",
+          "Make /sets/[id] and /profile/[username] publicly accessible without auth (2-3 hours — HIGHEST IMPACT)"
+        ]
+      },
+      {
+        "name": "Phase 2: High-Impact Improvements",
+        "timeframe": "Weeks 2-3 (3-4 days total)",
+        "items": [
+          "Add Open Graph + Twitter Card tags to root layout.tsx",
+          "Create static OG image (1200×630) for homepage social sharing",
+          "Add unique title + meta description to each route (login, register, search, upload, profile, set)",
+          "Add WebSite JSON-LD schema to homepage",
+          "Add MusicRecording/CreativeWork schema to /sets/[id]",
+          "Add Person schema to /profile/[username]"
+        ]
+      },
+      {
+        "name": "Phase 3: Analytics & Authority",
+        "timeframe": "Month 2",
+        "items": [
+          "Install Plausible or Umami analytics (Phase 6 item)",
+          "Submit sitemap.xml to Google Search Console",
+          "Create /llms.txt for AI crawler guidance",
+          "Add apple-touch-icon and PWA manifest",
+          "Add security headers (CSP, X-Frame-Options) to next.config.mjs",
+          "Set up dynamic OG images for set pages via @vercel/og"
+        ]
+      },
+      {
+        "name": "Phase 4: Content & Long-tail",
+        "timeframe": "Ongoing",
+        "items": [
+          "Create mood landing pages (/mood/hypnotic, /mood/euphoric etc.) as publicly indexable SEO entry points",
+          "Add BreadcrumbList schema to set and profile pages",
+          "Consider /discover or /blog for editorial content (artist spotlights, genre guides)",
+          "Monitor Core Web Vitals via GSC after indexation"
+        ]
+      }
+    ]
+  },
+  "artifacts": {
+    "findings_dir": "findings/",
+    "screenshots_dir": "screenshots/"
+  }
+}
