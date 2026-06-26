@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# temp/debug scripts — never commit
+__dbquery*
+
 # dependencies
 /node_modules
 /.pnp

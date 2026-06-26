@@ -162,7 +162,13 @@ export async function POST(req: Request) {
     });
 
     if (workerUrl) {
-      // Fire-and-forget to transcoding worker
+      const fallbackToReady = async (reason: string) => {
+        console.error(`[worker trigger] ${reason} — falling back to READY for set ${set.id}`);
+        await db.set.update({ where: { id: set.id }, data: { status: "READY" } }).catch((e) =>
+          console.error("[worker fallback] DB update failed:", e)
+        );
+      };
+
       fetch(`${workerUrl}/transcode`, {
         method: "POST",
         headers: {
@@ -170,7 +176,16 @@ export async function POST(req: Request) {
           "x-worker-secret": process.env.WORKER_SECRET ?? "",
         },
         body: JSON.stringify({ setId: set.id, key }),
-      }).catch((err) => console.error("[worker trigger] failed:", err));
+      })
+        .then(async (r) => {
+          if (!r.ok) {
+            const body = await r.text().catch(() => "");
+            await fallbackToReady(`worker returned ${r.status}: ${body}`);
+          }
+        })
+        .catch(async (err) => {
+          await fallbackToReady(`network error: ${err instanceof Error ? err.message : String(err)}`);
+        });
     } else {
       // No worker configured — mark ready immediately so set is playable
       await db.set.update({ where: { id: set.id }, data: { status: "READY" } });
