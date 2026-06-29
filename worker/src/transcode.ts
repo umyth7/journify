@@ -130,7 +130,10 @@ export async function processTranscodeJob(setId: string, originalKey: string): P
 
     if (!shouldTranscode(probe)) {
       console.log(`[transcode] Skipping transcode (already optimal)`);
-      await db.set.update({ where: { id: setId }, data: { status: "READY" } });
+      await db.set.update({
+        where: { id: setId },
+        data: { status: "READY", duration: Math.round(probe.duration) },
+      });
       return;
     }
 
@@ -151,7 +154,7 @@ export async function processTranscodeJob(setId: string, originalKey: string): P
     // 5. Update DB first (so set is never in a broken state)
     await db.set.update({
       where: { id: setId },
-      data: { status: "READY", audioUrl: newAudioUrl },
+      data: { status: "READY", audioUrl: newAudioUrl, duration: Math.round(probe.duration) },
     });
     console.log(`[transcode] Set ${setId} → READY`);
 

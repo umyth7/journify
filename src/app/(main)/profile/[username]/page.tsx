@@ -9,6 +9,7 @@ import { SetCard } from "@/components/set/SetCard";
 import { FollowButton } from "@/components/profile/FollowButton";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { BASE_URL } from "@/lib/constants";
+import { safeJsonLd } from "@/lib/utils";
 import type { Set } from "@/types";
 
 export async function generateMetadata({
@@ -161,7 +162,7 @@ export default async function ProfilePage({
     <div className="py-10 space-y-10">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(personSchema) }}
       />
       {/* Profile header */}
       <div className="flex items-start gap-6">

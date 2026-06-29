@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { Trash2, Send, Loader2, MessageCircle } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
@@ -28,16 +28,38 @@ function timeAgo(dateStr: string) {
 export function Comments({ setId }: { setId: string }) {
   const { user, isLoaded } = useUser();
   const [comments, setComments] = useState<Comment[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetch(`/api/sets/${setId}/comments`)
-      .then((r) => r.json())
-      .then((d) => setComments(d.comments ?? []));
+  const fetchComments = useCallback(async (cursor?: string) => {
+    const url = `/api/sets/${setId}/comments${cursor ? `?cursor=${cursor}` : ""}`;
+    const res = await fetch(url);
+    const data = await res.json() as { comments: Comment[]; nextCursor: string | null };
+    return data;
   }, [setId]);
+
+  useEffect(() => {
+    fetchComments().then((data) => {
+      setComments(data.comments ?? []);
+      setNextCursor(data.nextCursor);
+    });
+  }, [fetchComments]);
+
+  const handleLoadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const data = await fetchComments(nextCursor);
+      setComments((prev) => [...prev, ...(data.comments ?? [])]);
+      setNextCursor(data.nextCursor);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +72,7 @@ export function Comments({ setId }: { setId: string }) {
         body: JSON.stringify({ body }),
       });
       if (!res.ok) return;
-      const { comment } = await res.json();
+      const { comment } = await res.json() as { comment: Comment };
       setComments((prev) => [...prev, comment]);
       setBody("");
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -74,7 +96,7 @@ export function Comments({ setId }: { setId: string }) {
       <div className="flex items-center gap-2">
         <MessageCircle className="w-4 h-4 text-zinc-500" />
         <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">
-          Yorumlar {comments.length > 0 && `(${comments.length})`}
+          Yorumlar {comments.length > 0 && `(${comments.length}${nextCursor ? "+" : ""})`}
         </p>
       </div>
 
@@ -121,6 +143,20 @@ export function Comments({ setId }: { setId: string }) {
         )}
         <div ref={bottomRef} />
       </div>
+
+      {/* Load more button */}
+      {nextCursor && (
+        <button
+          onClick={handleLoadMore}
+          disabled={loadingMore}
+          className="w-full py-2 text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-700 rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loadingMore
+            ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Yükleniyor…</>
+            : "Daha fazla yorum yükle"
+          }
+        </button>
+      )}
 
       {/* Comment form */}
       {isLoaded && (

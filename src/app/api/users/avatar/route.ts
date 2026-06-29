@@ -30,7 +30,8 @@ export async function POST(req: Request) {
     { expiresIn: 300 }
   );
 
-  const publicUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
+  const r2PublicUrl = process.env.R2_PUBLIC_URL ?? "";
+  const publicUrl = `${r2PublicUrl}/${key}`;
   return NextResponse.json({ signedUrl, publicUrl });
 }
 
@@ -40,7 +41,8 @@ export async function PATCH(req: Request) {
 
   const { avatarUrl } = await req.json() as { avatarUrl: string };
   if (!avatarUrl) return NextResponse.json({ error: "Missing avatarUrl" }, { status: 400 });
-  if (!avatarUrl.startsWith(process.env.R2_PUBLIC_URL!)) {
+  const r2PublicUrl = process.env.R2_PUBLIC_URL ?? "";
+  if (!avatarUrl.startsWith(r2PublicUrl)) {
     return NextResponse.json({ error: "Invalid avatarUrl" }, { status: 400 });
   }
 

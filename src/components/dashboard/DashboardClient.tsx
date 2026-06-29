@@ -209,6 +209,7 @@ export function DashboardClient({ initialSets }: { initialSets: DashboardSet[] }
                   rows={4}
                   className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors resize-none"
                 />
+                <p className="text-xs text-zinc-500 text-right mt-1">{editState.description.length}/2000</p>
               </div>
             </div>
 

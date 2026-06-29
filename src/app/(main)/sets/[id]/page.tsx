@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Clock, Music2, Headphones } from "lucide-react";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
-import { formatDuration } from "@/lib/utils";
+import { formatDuration, safeJsonLd } from "@/lib/utils";
 import { BASE_URL } from "@/lib/constants";
 import { PlayButton } from "@/components/set/PlayButton";
 import { LikeButton } from "@/components/set/LikeButton";
@@ -55,6 +55,7 @@ const MOOD_LABELS: Record<string, { label: string; emoji: string; color: string 
   MELANCHOLIC: { label: "Melancholic", emoji: "🌙", color: "text-slate-400 bg-slate-500/10 border-slate-500/30" },
   RAW:         { label: "Raw",         emoji: "⚡", color: "text-red-400 bg-red-500/10 border-red-500/30" },
   COSMIC:      { label: "Cosmic",      emoji: "🚀", color: "text-purple-400 bg-purple-500/10 border-purple-500/30" },
+  COFFEE:      { label: "Coffee",      emoji: "☕", color: "text-amber-700 bg-amber-900/20 border-amber-800/40" },
 };
 
 export default async function SetDetailPage({ params }: { params: { id: string } }) {
@@ -122,7 +123,7 @@ export default async function SetDetailPage({ params }: { params: { id: string }
     <div className="max-w-3xl mx-auto py-10 space-y-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(musicSchema) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(musicSchema) }}
       />
       {/* Hero */}
       <div className="flex gap-6 items-start">
