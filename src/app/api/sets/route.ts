@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { Mood } from "@prisma/client";
 
 const VALID_MOODS: Mood[] = ["HYPNOTIC","EUPHORIC","TRIBAL","FLOATING","DARK","MELANCHOLIC","RAW","COSMIC","COFFEE"];
 
 export async function GET(req: Request) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   const { searchParams } = new URL(req.url);
 
   const mood = searchParams.get("mood") as Mood | null;

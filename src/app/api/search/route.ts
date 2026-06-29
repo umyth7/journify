@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 const VALID_MOODS = [
@@ -16,7 +16,7 @@ const VALID_MOODS = [
 type ValidMood = (typeof VALID_MOODS)[number];
 
 export async function GET(req: Request) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") ?? "").trim();
   const mood = searchParams.get("mood") ?? "";

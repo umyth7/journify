@@ -5,12 +5,13 @@ import { notifyFollowersOfNewSet } from "@/lib/notifications";
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const set = await db.set.findUnique({
     where: { id: params.id },
-    select: { status: true, audioUrl: true },
+    select: { status: true },
   });
 
   if (!set) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  return NextResponse.json({ status: set.status, audioUrl: set.audioUrl });
+  // audioUrl is intentionally omitted — callers must use /api/audio/[...key] proxy.
+  return NextResponse.json({ status: set.status });
 }
 
 /**
@@ -28,12 +29,15 @@ export async function PATCH(
   }
 
   const body = await req.json().catch(() => ({}));
-  const newStatus = body.status as string;
-  const audioUrl = typeof body.audioUrl === "string" ? body.audioUrl : undefined;
+  const VALID_STATUSES = ["READY", "FAILED", "PROCESSING"] as const;
+  type ValidStatus = (typeof VALID_STATUSES)[number];
 
-  if (!["READY", "FAILED", "PROCESSING"].includes(newStatus)) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  const rawStatus = typeof body.status === "string" ? body.status : null;
+  if (!rawStatus || !(VALID_STATUSES as readonly string[]).includes(rawStatus)) {
+    return NextResponse.json({ error: "status must be READY, FAILED, or PROCESSING" }, { status: 400 });
   }
+  const newStatus = rawStatus as ValidStatus;
+  const audioUrl = typeof body.audioUrl === "string" ? body.audioUrl : undefined;
 
   const set = await db.set.findUnique({
     where: { id: params.id },
@@ -52,7 +56,7 @@ export async function PATCH(
   await db.set.update({
     where: { id: params.id },
     data: {
-      status: newStatus as import("@prisma/client").SetStatus,
+      status: newStatus,
       ...(audioUrl ? { audioUrl } : {}),
     },
   });

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import {
   CreateMultipartUploadCommand,
   UploadPartCommand,
@@ -22,7 +23,7 @@ const UPLOAD_RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -32,12 +33,17 @@ export async function POST(req: Request) {
 
   // --- INITIATE ---
   if (action === "initiate") {
-    const body = await req.json();
-    const { filename, fileSize, contentType } = body as {
-      filename: string;
-      fileSize: number;
-      contentType: string;
-    };
+    const body = await req.json().catch(() => ({}));
+    const filename = typeof body.filename === "string" ? body.filename.trim() : null;
+    const fileSize = typeof body.fileSize === "number" ? body.fileSize : null;
+    const contentType = typeof body.contentType === "string" ? body.contentType.trim() : null;
+
+    if (!filename || fileSize === null || !contentType) {
+      return NextResponse.json(
+        { error: "filename (string), fileSize (number), and contentType (string) are required." },
+        { status: 400 }
+      );
+    }
 
     if (!ALLOWED_AUDIO_TYPES.includes(contentType)) {
       return NextResponse.json({ error: "Only audio files are allowed (MP3, WAV, FLAC, AAC, OGG)" }, { status: 400 });
@@ -90,14 +96,22 @@ export async function POST(req: Request) {
 
   // --- COMPLETE ---
   if (action === "complete") {
-    const body = await req.json();
-    const { uploadId, key, parts, metadata, duration } = body as {
-      uploadId: string;
-      key: string;
-      parts: { partNumber: number; etag: string }[];
-      metadata: { title: string; description: string; genre: string; mood?: string; coverUrl?: string };
-      duration: number;
-    };
+    const body = await req.json().catch(() => ({}));
+
+    const uploadId = typeof body.uploadId === "string" ? body.uploadId : null;
+    const key = typeof body.key === "string" ? body.key : null;
+    const parts: { partNumber: number; etag: string }[] | null =
+      Array.isArray(body.parts) ? body.parts : null;
+    const metadata =
+      body.metadata !== null && typeof body.metadata === "object" ? body.metadata : null;
+    const duration = typeof body.duration === "number" ? body.duration : null;
+
+    if (!uploadId || !key || !parts || !metadata || duration === null) {
+      return NextResponse.json(
+        { error: "uploadId, key, parts, metadata, and duration are required." },
+        { status: 400 }
+      );
+    }
 
     if (duration < MIN_DURATION || duration > MAX_DURATION) {
       // Abort the incomplete upload to avoid orphaned parts
@@ -205,8 +219,13 @@ export async function POST(req: Request) {
 
   // --- ABORT ---
   if (action === "abort") {
-    const { uploadId, key } = await req.json() as { uploadId: string; key: string };
-    await r2.send(new AbortMultipartUploadCommand({ Bucket: R2_BUCKET, Key: key, UploadId: uploadId }));
+    const abortBody = await req.json().catch(() => ({}));
+    const abortUploadId = typeof abortBody.uploadId === "string" ? abortBody.uploadId : null;
+    const abortKey = typeof abortBody.key === "string" ? abortBody.key : null;
+    if (!abortUploadId || !abortKey) {
+      return NextResponse.json({ error: "uploadId and key are required." }, { status: 400 });
+    }
+    await r2.send(new AbortMultipartUploadCommand({ Bucket: R2_BUCKET, Key: abortKey, UploadId: abortUploadId }));
     return NextResponse.json({ ok: true });
   }
 

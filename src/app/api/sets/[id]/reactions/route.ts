@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
@@ -9,7 +9,7 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
 
   const rows = await db.reaction.groupBy({
     by: ["emoji"],
@@ -34,7 +34,7 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { emoji } = await req.json();

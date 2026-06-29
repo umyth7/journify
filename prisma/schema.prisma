@@ -47,6 +47,12 @@ model Set {
   reactions Reaction[]
   comments  Comment[]
   playLogs  PlayLog[]
+
+  // Performance indexes (TASK-018)
+  @@index([userId])
+  @@index([status])
+  @@index([mood])
+  @@index([status, createdAt(sort: Desc)])
 }
 
 enum SetStatus {

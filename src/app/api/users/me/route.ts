@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 const MAX_DISPLAY_NAME = 60;
@@ -23,7 +23,7 @@ function sanitizeUrl(val: unknown): string | null {
 }
 
 export async function PATCH(req: Request) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
@@ -59,7 +59,7 @@ export async function PATCH(req: Request) {
 }
 
 export async function GET() {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const user = await db.user.findUnique({

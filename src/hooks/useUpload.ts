@@ -4,6 +4,26 @@ import { useState, useCallback } from "react";
 
 const PART_SIZE = 10 * 1024 * 1024; // 10MB — must match server
 
+/** Upload up to `limit` parts concurrently (sliding window, no p-limit dep). */
+async function uploadPartsParallel<T>(
+  tasks: Array<() => Promise<T>>,
+  limit: number
+): Promise<T[]> {
+  const results: T[] = new Array(tasks.length);
+  let nextIndex = 0;
+
+  const worker = async () => {
+    while (nextIndex < tasks.length) {
+      const i = nextIndex++;
+      results[i] = await tasks[i]();
+    }
+  };
+
+  // Start `limit` workers; each picks the next available task
+  await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker));
+  return results;
+}
+
 export type UploadStatus = "idle" | "uploading" | "completing" | "done" | "error";
 
 export interface UploadMetadata {
@@ -94,10 +114,10 @@ export function useUpload(): UseUploadReturn {
       key = data.key;
       const parts: { partNumber: number; signedUrl: string }[] = data.parts;
 
-      // 2. Upload each part sequentially (keeps progress accurate)
-      const completedParts: { partNumber: number; etag: string }[] = [];
-      for (let i = 0; i < parts.length; i++) {
-        const { partNumber, signedUrl } = parts[i];
+      // 2. Upload parts in parallel (max 5 concurrent) — 4-5x faster than sequential
+      let completedCount = 0;
+
+      const uploadTasks = parts.map(({ partNumber, signedUrl }) => async () => {
         const start = (partNumber - 1) * PART_SIZE;
         const end = Math.min(start + PART_SIZE, file.size);
         const chunk = file.slice(start, end);
@@ -111,9 +131,14 @@ export function useUpload(): UseUploadReturn {
 
         // ETag may be quoted — strip quotes for the Complete call
         const etag = (res.headers.get("etag") ?? "").replace(/"/g, "");
-        completedParts.push({ partNumber, etag });
-        setProgress(Math.round(((i + 1) / parts.length) * 90));
-      }
+        completedCount++;
+        setProgress(Math.round((completedCount / parts.length) * 90));
+        return { partNumber, etag };
+      });
+
+      const uploadedParts = await uploadPartsParallel(uploadTasks, 5);
+      // CompleteMultipartUpload requires parts in ascending partNumber order
+      const completedParts = uploadedParts.sort((a, b) => a.partNumber - b.partNumber);
 
       // 3. Complete multipart upload + create DB record
       setStatus("completing");
