@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { sendNewSetNotification } from "@/lib/email";
+import { notifyFollowersOfNewSet } from "@/lib/notifications";
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const set = await db.set.findUnique({
@@ -58,84 +57,17 @@ export async function PATCH(
     },
   });
 
-  // When set becomes READY, notify followers (fire-and-forget)
+  // When set becomes READY, notify followers (fire-and-forget, batched Clerk API)
   if (newStatus === "READY" && set.status !== "READY") {
-    notifyFollowers(set).catch((err) =>
-      console.error("[status patch] notification error:", err)
-    );
+    notifyFollowersOfNewSet({
+      setId: set.id,
+      setTitle: set.title,
+      coverUrl: set.coverUrl,
+      artistId: set.userId,
+      artistName: set.user.displayName ?? set.user.username,
+      artistUsername: set.user.username,
+    }).catch((err) => console.error("[status patch] notification error:", err));
   }
 
   return NextResponse.json({ ok: true });
-}
-
-async function notifyFollowers(set: {
-  id: string;
-  title: string;
-  coverUrl: string | null;
-  userId: string;
-  user: { id: string; username: string; displayName: string | null };
-}) {
-  // Get all followers of the artist
-  const follows = await db.follow.findMany({
-    where: { followingId: set.userId },
-    select: { followerId: true },
-  });
-
-  if (follows.length === 0) return;
-
-  const artistName = set.user.displayName ?? set.user.username;
-
-  // Process in batches of 10 to avoid hammering Clerk API
-  const BATCH = 10;
-  for (let i = 0; i < follows.length; i += BATCH) {
-    const batch = follows.slice(i, i + BATCH);
-
-    await Promise.all(
-      batch.map(async ({ followerId }) => {
-        try {
-          // Check for recent notification to avoid duplicates
-          const recentLog = await db.emailNotificationLog.findFirst({
-            where: {
-              type: "new_set",
-              toUserId: followerId,
-              setId: set.id,
-            },
-          });
-          if (recentLog) return;
-
-          const clerkUser = await (await clerkClient()).users.getUser(followerId);
-          const toEmail = clerkUser.emailAddresses?.[0]?.emailAddress;
-          if (!toEmail) return;
-
-          const toDbUser = await db.user.findUnique({
-            where: { id: followerId },
-            select: { displayName: true, username: true },
-          });
-          const toName = toDbUser?.displayName ?? toDbUser?.username ?? "there";
-
-          await Promise.all([
-            sendNewSetNotification({
-              toEmail,
-              toName,
-              artistName,
-              artistUsername: set.user.username,
-              setTitle: set.title,
-              setId: set.id,
-              coverUrl: set.coverUrl,
-            }),
-            db.emailNotificationLog.create({
-              data: {
-                type: "new_set",
-                toUserId: followerId,
-                fromUserId: set.userId,
-                setId: set.id,
-              },
-            }),
-          ]);
-        } catch (err) {
-          console.error(`[notify] follower ${followerId} error:`, err);
-        }
-      })
-    );
-  }
 }

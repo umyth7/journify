@@ -1,7 +1,7 @@
 # Journey — Proje Bağlamı
 
 ## Proje Özeti
-Live set yükleme ve dinleme platformu. Kullanıcılar en az 40 dk'lık live set yükleyebilir ve dinleyebilir. Marka adı: **Journey** (Music is a Journey).
+Live set yükleme ve dinleme platformu. Kullanıcılar en az 40 dk'lık live set yükleyebilir ve dinleyebilir. Marka adı: **SensSetify** (Music is a Journey).
 
 ## Mimari Kararlar
 - **Frontend:** Next.js 14 (App Router) + TypeScript + Tailwind — Vercel'e deploy

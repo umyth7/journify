@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
-
-const BASE = "https://www.senssetify.com";
+import { BASE_URL as BASE } from "@/lib/constants";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [sets, users] = await Promise.all([
@@ -9,9 +8,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { status: "READY" },
       select: { id: true, updatedAt: true },
       orderBy: { createdAt: "desc" },
+      take: 5000, // TASK-009: guard against unbounded sitemap growth
     }),
     db.user.findMany({
       select: { username: true, updatedAt: true },
+      take: 2000, // TASK-009: guard against unbounded sitemap growth
     }),
   ]);
 

@@ -4,7 +4,7 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { db } from "@/lib/db";
 import { r2, R2_BUCKET } from "@/lib/r2";
 
-const MOOD_VALUES = ["HYPNOTIC", "EUPHORIC", "TRIBAL", "FLOATING", "DARK", "MELANCHOLIC", "RAW", "COSMIC"] as const;
+const MOOD_VALUES = ["HYPNOTIC", "EUPHORIC", "TRIBAL", "FLOATING", "DARK", "MELANCHOLIC", "RAW", "COSMIC", "COFFEE"] as const;
 
 function urlToKey(url: string): string {
   const base = process.env.R2_PUBLIC_URL ?? "";
