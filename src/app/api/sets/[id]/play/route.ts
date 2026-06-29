@@ -1,31 +1,63 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
+const RATE_WINDOW_MS = 10 * 60 * 1000; // 10 minutes — 1 counted play per IP per set per window
+
 /**
  * POST /api/sets/[id]/play
  *
  * Fire-and-forget play count increment.
  * - No auth required (anonymous plays counted too)
- * - Uses atomic increment to avoid race conditions
- * - Returns { playsCount } after increment
+ * - IP-based rate limiting: max 1 play per set per IP per 10 minutes (DB-backed PlayLog)
+ * - Uses Prisma `updateMany` + `increment` for type-safe atomic update
  */
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    // Raw update to avoid regenerating Prisma client before deploy
-    await db.$executeRaw`
-      UPDATE "Set"
-      SET "playsCount" = "playsCount" + 1
-      WHERE id = ${params.id} AND status = 'READY'
-    `;
-    const result = await db.$queryRaw<[{ playsCount: number }]>`
-      SELECT "playsCount" FROM "Set" WHERE id = ${params.id}
-    `;
-    return NextResponse.json({ playsCount: result[0]?.playsCount ?? 0 });
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+      req.headers.get("x-real-ip") ??
+      "unknown";
+
+    const windowStart = new Date(Date.now() - RATE_WINDOW_MS);
+
+    // Rate limit check: already played from this IP in the last 10 minutes?
+    const recentPlay = await db.playLog.findFirst({
+      where: { setId: params.id, ip, createdAt: { gte: windowStart } },
+      select: { id: true },
+    });
+
+    if (recentPlay) {
+      // Within rate window — return current count without incrementing
+      const current = await db.set.findUnique({
+        where: { id: params.id },
+        select: { playsCount: true },
+      });
+      return NextResponse.json({ playsCount: current?.playsCount ?? 0 });
+    }
+
+    // Log play and increment atomically (set must be READY to count)
+    const [, updateResult] = await Promise.all([
+      db.playLog.create({ data: { setId: params.id, ip } }),
+      db.set.updateMany({
+        where: { id: params.id, status: "READY" },
+        data: { playsCount: { increment: 1 } },
+      }),
+    ]);
+
+    // If updateResult.count === 0, set is not READY — still logged the attempt
+    void updateResult;
+
+    const result = await db.set.findUnique({
+      where: { id: params.id },
+      select: { playsCount: true },
+    });
+
+    return NextResponse.json({ playsCount: result?.playsCount ?? 0 });
   } catch {
-    // Set not found or DB error — silently ignore
+    // DB error or set not found — silently ignore (fire-and-forget)
     return NextResponse.json({ playsCount: 0 });
   }
 }

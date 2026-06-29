@@ -2,44 +2,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { Headphones, Heart, Users, Music } from "lucide-react";
 import type { Metadata } from "next";
-import { db } from "@/lib/db";
-import { DashboardClient, type DashboardSet } from "@/components/dashboard/DashboardClient";
+import { getDashboardData } from "@/lib/dashboard";
+import { DashboardClient } from "@/components/dashboard/DashboardClient";
 
 export const metadata: Metadata = { title: "Dashboard — Senssetify" };
-
-async function getDashboardData(userId: string) {
-  const [sets, followersCount] = await Promise.all([
-    db.set.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        genre: true,
-        mood: true,
-        status: true,
-        playsCount: true,
-        coverUrl: true,
-        createdAt: true,
-        _count: { select: { likes: true } },
-      },
-    }),
-    db.follow.count({ where: { followingId: userId } }),
-  ]);
-
-  const totalPlays = sets.reduce((sum, s) => sum + s.playsCount, 0);
-  const totalLikes = sets.reduce((sum, s) => sum + s._count.likes, 0);
-
-  return {
-    stats: { totalPlays, totalLikes, totalFollowers: followersCount, totalSets: sets.length },
-    sets: sets.map((s) => ({
-      ...s,
-      likesCount: s._count.likes,
-      createdAt: s.createdAt.toISOString(),
-    })) as DashboardSet[],
-  };
-}
 
 const STAT_CARDS = [
   { key: "totalPlays", label: "Total Plays", icon: Headphones, color: "text-violet-400" },

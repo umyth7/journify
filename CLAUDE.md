@@ -1,7 +1,16 @@
 # Journey — Proje Bağlamı
 
+## Dev-Branch-Only Dosyalar
+Aşağıdaki dosyalar **sadece `dev` branch'inde** kalır, `main`'e merge edilmez ve `.gitignore`'a eklidir:
+- `senssetify.com-audit/` — SEO audit çıktıları (otomatik üretilir, sürekli değişir)
+- `.claude/agents/` — Claude Code agent tanımları (geliştirme tooling'i)
+- `CLAUDE.md` — Bu dosya (Claude geliştirme bağlamı)
+- `ANALYSIS_REPORT.md`, `TASKS.md`, `docs/` — analiz ve görev dosyaları
+
+PR açarken bu dosyaları `main`'e dahil etme.
+
 ## Proje Özeti
-Live set yükleme ve dinleme platformu. Kullanıcılar en az 40 dk'lık live set yükleyebilir ve dinleyebilir. Marka adı: **Journey** (Music is a Journey).
+Live set yükleme ve dinleme platformu. Kullanıcılar en az 40 dk'lık live set yükleyebilir ve dinleyebilir. Marka adı: **SensSetify** (Music is a Journey).
 
 ## Mimari Kararlar
 - **Frontend:** Next.js 14 (App Router) + TypeScript + Tailwind — Vercel'e deploy

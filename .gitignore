@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# temp/debug scripts — never commit
+__dbquery*
+
 # dependencies
 /node_modules
 /.pnp
@@ -49,3 +52,10 @@ next-env.d.ts
 
 # local dev notes (not for repo)
 /docs/pending-security-notes.md
+
+# dev-branch-only — SEO audit outputs, analysis reports (auto-generated, değişken)
+/senssetify.com-audit/
+/ANALYSIS_REPORT.md
+/TASKS.md
+/docs/ANALYSIS_REPORT.md
+/docs/GROWTH_ANALYSIS.md

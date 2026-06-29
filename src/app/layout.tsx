@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Syne } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { BASE_URL } from "@/lib/constants";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -20,8 +21,6 @@ const syne = Syne({
   display: "swap",
   weight: ["400", "500", "600", "700", "800"],
 });
-
-const BASE_URL = "https://www.senssetify.com";
 
 const WEBSITE_SCHEMA = {
   "@context": "https://schema.org",

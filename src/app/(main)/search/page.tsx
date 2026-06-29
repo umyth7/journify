@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Search } from "lucide-react";
 import { SearchContent } from "./_search-content";
+import { BASE_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Search Live Sets",
   description: "Search thousands of long-form live DJ sets by mood, artist, or genre on Senssetify.",
-  alternates: { canonical: "https://www.senssetify.com/search" },
+  alternates: { canonical: `${BASE_URL}/search` },
   openGraph: {
     title: "Search Live Sets",
     description: "Find live sets that match your mood — search by artist, genre, or emotional state.",
-    url: "https://www.senssetify.com/search",
+    url: `${BASE_URL}/search`,
     type: "website",
   },
   twitter: {

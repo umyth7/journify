@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import type { Mood } from "@prisma/client";
 
-const VALID_MOODS: Mood[] = ["HYPNOTIC","EUPHORIC","TRIBAL","FLOATING","DARK","MELANCHOLIC","RAW","COSMIC"];
+const VALID_MOODS: Mood[] = ["HYPNOTIC","EUPHORIC","TRIBAL","FLOATING","DARK","MELANCHOLIC","RAW","COSMIC","COFFEE"];
 
 export async function GET(req: Request) {
   const { userId } = await auth();

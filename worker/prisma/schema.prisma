@@ -13,12 +13,16 @@ model User {
   displayName String?
   avatarUrl   String?
   bio         String?
+  instagram   String?
+  soundcloud  String?
+  website     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   sets      Set[]
   likes     Like[]
   reactions Reaction[]
+  comments  Comment[]
   followers Follow[] @relation("FollowingRelation")
   following Follow[] @relation("FollowerRelation")
 }
@@ -33,6 +37,7 @@ model Set {
   audioUrl    String
   coverUrl    String?
   status      SetStatus @default(PENDING)
+  playsCount  Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -40,6 +45,7 @@ model Set {
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   likes     Like[]
   reactions Reaction[]
+  comments  Comment[]
 }
 
 enum SetStatus {
@@ -58,6 +64,7 @@ enum Mood {
   MELANCHOLIC
   RAW
   COSMIC
+  COFFEE
 }
 
 model Like {
@@ -92,4 +99,17 @@ model Reaction {
   set  Set  @relation(fields: [setId], references: [id], onDelete: Cascade)
 
   @@id([userId, setId, emoji])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  createdAt DateTime @default(now())
+
+  userId String
+  setId  String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  set    Set  @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  @@index([setId, createdAt])
 }

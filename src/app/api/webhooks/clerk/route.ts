@@ -45,9 +45,15 @@ export async function POST(req: Request) {
 
   if (event.type === "user.updated") {
     const { id, username, image_url, first_name, last_name } = event.data;
-    await db.user.update({
+    await db.user.upsert({
       where: { id },
-      data: {
+      update: {
+        username: username ?? id,
+        displayName: [first_name, last_name].filter(Boolean).join(" ") || null,
+        avatarUrl: image_url || null,
+      },
+      create: {
+        id,
         username: username ?? id,
         displayName: [first_name, last_name].filter(Boolean).join(" ") || null,
         avatarUrl: image_url || null,
@@ -58,7 +64,7 @@ export async function POST(req: Request) {
   if (event.type === "user.deleted") {
     const { id } = event.data;
     if (id) {
-      await db.user.delete({ where: { id } });
+      await db.user.deleteMany({ where: { id } });
     }
   }
 

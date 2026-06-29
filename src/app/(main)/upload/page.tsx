@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Upload, Music, ImagePlus, X, AlertCircle, Loader2, Disc3, Sparkles, Globe2, Waves, Moon, CloudDrizzle, Zap, Rocket } from "lucide-react";
+import { Upload, Music, ImagePlus, X, AlertCircle, Loader2, Disc3, Sparkles, Globe2, Waves, Moon, CloudDrizzle, Zap, Rocket, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDuration } from "@/lib/utils";
@@ -19,6 +19,7 @@ const GENRES = [
 ];
 
 const MOODS = [
+  { id: "COFFEE",      label: "Coffee",      tagline: "Slow mornings",  Icon: Coffee,       color: "amber"  },
   { id: "HYPNOTIC",    label: "Hypnotic",    tagline: "Time suspends",  Icon: Disc3,        color: "violet" },
   { id: "EUPHORIC",    label: "Euphoric",    tagline: "Chest opens",    Icon: Sparkles,     color: "amber"  },
   { id: "TRIBAL",      label: "Tribal",      tagline: "Cells respond",  Icon: Globe2,       color: "orange" },
@@ -101,6 +102,10 @@ export default function UploadPage() {
 
     try {
       const dur = await getAudioDuration(file);
+      if (!isFinite(dur)) {
+        setAudioError("Ses dosyasının süresi okunamadı. Farklı bir format deneyin.");
+        return;
+      }
       if (dur < MIN_DURATION) {
         setAudioError(`Set must be at least 40 minutes long (this is ${Math.floor(dur / 60)} min)`);
         return;

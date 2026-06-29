@@ -100,7 +100,7 @@ export function Comments({ setId }: { setId: string }) {
                     <span className="text-xs font-semibold text-zinc-300">{name}</span>
                     <span className="text-xs text-zinc-600">{timeAgo(c.createdAt)}</span>
                   </div>
-                  <p className="text-sm text-zinc-400 leading-relaxed break-words">{c.body}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed [overflow-wrap:anywhere]">{c.body}</p>
                 </div>
                 {isOwn && (
                   <button

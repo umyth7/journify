@@ -1,7 +1,8 @@
 "use client";
 
 import type { ElementType } from "react";
-import { Disc3, Sparkles, Globe2, Waves, Moon, CloudDrizzle, Zap, Rocket } from "lucide-react";
+import Image from "next/image";
+import { Disc3, Sparkles, Globe2, Waves, Moon, CloudDrizzle, Zap, Rocket, Coffee } from "lucide-react";
 
 export type MoodId =
   | "HYPNOTIC"
@@ -12,6 +13,7 @@ export type MoodId =
   | "MELANCHOLIC"
   | "RAW"
   | "COSMIC"
+  | "COFFEE"
   | null;
 
 interface MoodItem {
@@ -19,6 +21,7 @@ interface MoodItem {
   label: string;
   tagline: string;
   Icon: ElementType;
+  image?: string;
   idle: string;
   hover: string;
   active: string;
@@ -29,6 +32,20 @@ interface MoodItem {
 }
 
 const MOODS: MoodItem[] = [
+  {
+    id: "COFFEE",
+    label: "Coffee",
+    tagline: "Slow mornings",
+    Icon: Coffee,
+    image: "/moods/coffee.webp",
+    idle: "bg-amber-950/30 border-amber-900/25",
+    hover: "hover:bg-amber-900/35 hover:border-amber-700/50",
+    active: "bg-amber-900/50 border-amber-600 shadow-lg shadow-amber-950/60",
+    iconIdle: "text-amber-600 bg-amber-950/70",
+    iconActive: "text-amber-300 bg-amber-800/60",
+    textIdle: "text-zinc-400",
+    textActive: "text-amber-300",
+  },
   {
     id: "HYPNOTIC",
     label: "Hypnotic",
@@ -143,17 +160,17 @@ interface MoodFilterProps {
 export function MoodFilter({ value, onChange }: MoodFilterProps) {
   return (
     <div className="relative">
-      {/* Mobile: horizontal scroll · Desktop: 4-col then 8-col grid */}
+      {/* Mobile: horizontal scroll · Desktop: 4-col then 9-col grid */}
       <div
         role="radiogroup"
         aria-label="Filter sets by mood"
         className="
           flex gap-3 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory
           md:grid md:grid-cols-4 md:overflow-visible md:snap-none
-          lg:grid-cols-8
+          lg:grid-cols-9
         "
       >
-        {MOODS.map(({ id, label, tagline, Icon, idle, hover, active, iconIdle, iconActive, textActive }) => {
+        {MOODS.map(({ id, label, tagline, Icon, image, idle, hover, active, iconIdle, iconActive, textActive }) => {
           const isActive = value === id;
           return (
             <button
@@ -162,7 +179,7 @@ export function MoodFilter({ value, onChange }: MoodFilterProps) {
               aria-checked={isActive}
               onClick={() => onChange(isActive ? null : id)}
               className={`
-                group relative flex-shrink-0 w-[148px] md:w-auto snap-start
+                group relative flex-shrink-0 w-[148px] md:w-auto snap-start overflow-hidden
                 flex flex-col items-center justify-center gap-2.5
                 px-3 py-5 rounded-2xl border backdrop-blur-sm
                 transition-all duration-300 cursor-pointer
@@ -171,10 +188,27 @@ export function MoodFilter({ value, onChange }: MoodFilterProps) {
                 ${!isActive && value !== null ? "opacity-35 hover:opacity-70 scale-[0.97] hover:scale-[0.99]" : "opacity-100 scale-100"}
               `}
             >
+              {/* Background photo */}
+              {image && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <Image
+                    src={image}
+                    alt=""
+                    fill
+                    sizes="(max-width: 768px) 148px, 160px"
+                    className="object-cover"
+                    style={{
+                      opacity: isActive ? 0.20 : 0.12,
+                      transition: "opacity 300ms",
+                    }}
+                  />
+                </div>
+              )}
+
               {/* Icon */}
               <div
                 className={`
-                  w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200
+                  relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200
                   ${isActive ? iconActive : iconIdle}
                 `}
               >
@@ -182,7 +216,7 @@ export function MoodFilter({ value, onChange }: MoodFilterProps) {
               </div>
 
               {/* Text */}
-              <div className="text-center">
+              <div className="relative text-center">
                 <p
                   className={`
                     text-sm font-semibold font-syne tracking-wide leading-none transition-colors duration-200

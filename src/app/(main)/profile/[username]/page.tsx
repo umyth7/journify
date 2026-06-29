@@ -8,9 +8,8 @@ import { db } from "@/lib/db";
 import { SetCard } from "@/components/set/SetCard";
 import { FollowButton } from "@/components/profile/FollowButton";
 import { AvatarUpload } from "@/components/profile/AvatarUpload";
+import { BASE_URL } from "@/lib/constants";
 import type { Set } from "@/types";
-
-const BASE_URL = "https://www.senssetify.com";
 
 export async function generateMetadata({
   params,
