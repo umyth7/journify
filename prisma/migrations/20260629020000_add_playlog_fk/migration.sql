@@ -1,0 +1,2 @@
+-- AddForeignKey
+ALTER TABLE "PlayLog" ADD CONSTRAINT "PlayLog_setId_fkey" FOREIGN KEY ("setId") REFERENCES "Set"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -1,12 +1,23 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+
+export async function GET(req: Request, { params }: { params: { id: string } }) {
+  const { searchParams } = new URL(req.url);
+  const cursor = searchParams.get("cursor") ?? undefined;
+  const rawLimit = parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10);
+  const limit = Math.min(isNaN(rawLimit) || rawLimit < 1 ? DEFAULT_LIMIT : rawLimit, MAX_LIMIT);
+
   const comments = await db.comment.findMany({
     where: { setId: params.id },
     orderBy: { createdAt: "asc" },
-    take: 100,
+    take: limit + 1,
+    ...(cursor
+      ? { skip: 1, cursor: { id: cursor } }
+      : {}),
     select: {
       id: true,
       body: true,
@@ -15,11 +26,16 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       user: { select: { username: true, displayName: true, avatarUrl: true } },
     },
   });
-  return NextResponse.json({ comments });
+
+  const hasMore = comments.length > limit;
+  const page = hasMore ? comments.slice(0, limit) : comments;
+  const nextCursor = hasMore ? page[page.length - 1].id : null;
+
+  return NextResponse.json({ comments: page, nextCursor });
 }
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { body } = await req.json() as { body?: string };

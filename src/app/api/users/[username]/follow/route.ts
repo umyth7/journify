@@ -1,4 +1,5 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendFollowNotification } from "@/lib/email";
@@ -7,7 +8,7 @@ export async function POST(
   _req: Request,
   { params }: { params: { username: string } }
 ) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const target = await db.user.findUnique({ where: { username: params.username } });

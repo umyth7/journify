@@ -47,14 +47,22 @@ export async function notifyFollowersOfNewSet({
 
   if (unnotifiedIds.length === 0) return;
 
-  // 3. Batch fetch Clerk user data (one API call for all followers)
+  // 3. Batch fetch Clerk user data — paginate in chunks of 100 to handle 500+
+  //    followers (TASK-034: getUserList limit is 500 max; chunk to be safe and
+  //    avoid silent truncation when a set goes viral).
   const clerk = await clerkClient();
-  const clerkUsersResult = await clerk.users.getUserList({
-    userId: unnotifiedIds,
-    limit: Math.min(unnotifiedIds.length, 500),
-  });
+  const CLERK_BATCH_SIZE = 100;
+  const chunks: string[][] = [];
+  for (let i = 0; i < unnotifiedIds.length; i += CLERK_BATCH_SIZE) {
+    chunks.push(unnotifiedIds.slice(i, i + CLERK_BATCH_SIZE));
+  }
+  const batchResults = await Promise.all(
+    chunks.map((batch) =>
+      clerk.users.getUserList({ userId: batch, limit: batch.length })
+    )
+  );
   const clerkUserMap = new Map(
-    clerkUsersResult.data.map((u) => [u.id, u])
+    batchResults.flatMap((r) => r.data.map((u) => [u.id, u] as const))
   );
 
   // 4. Batch fetch DB user data (one query for all followers)

@@ -153,7 +153,7 @@ export async function POST(req: Request) {
         description,
         genre,
         mood: metadata.mood && VALID_MOODS.includes(metadata.mood) ? (metadata.mood as import("@prisma/client").Mood) : null,
-        duration: Math.floor(duration),
+        duration: 0, // worker overwrites this with real duration from ffprobe
         audioUrl,
         coverUrl: metadata.coverUrl ?? null,
         status: "PROCESSING",

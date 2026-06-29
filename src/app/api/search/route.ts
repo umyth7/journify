@@ -2,6 +2,19 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 
+const VALID_MOODS = [
+  "HYPNOTIC",
+  "EUPHORIC",
+  "TRIBAL",
+  "FLOATING",
+  "DARK",
+  "MELANCHOLIC",
+  "RAW",
+  "COSMIC",
+  "COFFEE",
+] as const;
+type ValidMood = (typeof VALID_MOODS)[number];
+
 export async function GET(req: Request) {
   const { userId } = await auth();
   const { searchParams } = new URL(req.url);
@@ -13,7 +26,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ sets: [], artists: [] });
   }
 
-  const moodFilter = mood ? { mood: mood as import("@prisma/client").Mood } : {};
+  const validMood = VALID_MOODS.includes(mood as ValidMood) ? (mood as ValidMood) : null;
+  const moodFilter = validMood ? { mood: validMood } : {};
 
   const artistQuery = q.length >= 2
     ? db.user.findMany({

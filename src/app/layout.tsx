@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Syne } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
-import { BASE_URL } from "@/lib/constants";
+import { BASE_URL, APP_NAME } from "@/lib/constants";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -25,7 +25,7 @@ const syne = Syne({
 const WEBSITE_SCHEMA = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "Senssetify",
+  name: APP_NAME,
   description: "Mood-based live set discovery platform for underground electronic music",
   url: BASE_URL,
   potentialAction: {
@@ -38,24 +38,24 @@ const WEBSITE_SCHEMA = {
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "Senssetify — Music is a Journey",
-    template: "%s | Senssetify",
+    default: `${APP_NAME} — Music is a Journey`,
+    template: `%s | ${APP_NAME}`,
   },
   description: "Discover and share long-form live sets. Deep listening for the long road.",
   keywords: ["live sets", "electronic music", "techno", "DJ sets", "ambient", "mood music", "underground", "house music"],
   alternates: { canonical: BASE_URL },
   openGraph: {
-    title: "Senssetify — Music is a Journey",
+    title: `${APP_NAME} — Music is a Journey`,
     description: "Discover and share long-form live sets. Deep listening for the long road.",
     url: BASE_URL,
-    siteName: "Senssetify",
+    siteName: APP_NAME,
     type: "website",
     locale: "en_US",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Senssetify — Music is a Journey" }],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: `${APP_NAME} — Music is a Journey` }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Senssetify — Music is a Journey",
+    title: `${APP_NAME} — Music is a Journey`,
     description: "Discover and share long-form live sets. Deep listening for the long road.",
     images: ["/opengraph-image"],
   },

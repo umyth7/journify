@@ -281,13 +281,13 @@ export default function UploadPage() {
               id="description"
               rows={3}
               required
-              maxLength={1000}
+              maxLength={2000}
               placeholder="Tell listeners about this set — the vibe, the venue, the moment."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full bg-zinc-800 border border-zinc-700 hover:border-zinc-600 text-zinc-100 placeholder:text-zinc-500 rounded-lg px-3 py-2.5 text-sm resize-none outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-colors duration-150"
             />
-            <p className="text-xs text-zinc-600 text-right">{description.length}/1000</p>
+            <p className="text-xs text-zinc-500 text-right">{description.length}/2000</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
