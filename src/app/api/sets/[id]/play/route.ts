@@ -10,16 +10,36 @@ const RATE_WINDOW_MS = 10 * 60 * 1000; // 10 minutes — 1 counted play per IP p
  * - No auth required (anonymous plays counted too)
  * - IP-based rate limiting: max 1 play per set per IP per 10 minutes (DB-backed PlayLog)
  * - Uses Prisma `updateMany` + `increment` for type-safe atomic update
+ *
+ * TASK-035:
+ * - CF-Connecting-IP checked first (Cloudflare terminates TLS before Vercel)
+ * - If IP resolves to "unknown", playsCount is still incremented but no PlayLog
+ *   is written — avoids all anonymous requests sharing the same rate-limit bucket.
  */
 export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Prefer Cloudflare's header, then standard forwarded/real-IP headers
     const ip =
+      req.headers.get("cf-connecting-ip") ??
       req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
       req.headers.get("x-real-ip") ??
       "unknown";
+
+    // IP unknown — increment count but skip rate-limit log (TASK-035)
+    if (ip === "unknown") {
+      await db.set.updateMany({
+        where: { id: params.id, status: "READY" },
+        data: { playsCount: { increment: 1 } },
+      });
+      const current = await db.set.findUnique({
+        where: { id: params.id },
+        select: { playsCount: true },
+      });
+      return NextResponse.json({ playsCount: current?.playsCount ?? 0 });
+    }
 
     const windowStart = new Date(Date.now() - RATE_WINDOW_MS);
 

@@ -222,8 +222,8 @@ export default async function SetDetailPage({ params }: { params: { id: string }
         </div>
       )}
 
-      {/* Comments */}
-      <Comments setId={set.id} />
+      {/* Comments — set owner can moderate all comments (TASK-038) */}
+      <Comments setId={set.id} isOwner={userId === set.userId} />
     </div>
   );
 }

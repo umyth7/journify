@@ -1,3 +1,41 @@
+## [2026-06-29] - Backlog: TASK-034, TASK-035, TASK-038, TASK-039, TASK-037, TASK-022
+
+### TASK-034 — Clerk getUserList 500 follower sınırı aşıldı
+- **Ne yapıldı:** `src/lib/notifications.ts` içindeki tek `getUserList` çağrısı, `unnotifiedIds` dizisini 100'lük parçalara bölen ve `Promise.all` ile paralel çalıştıran paginated yaklaşıma dönüştürüldü. `batchResults.flatMap` ile sonuçlar birleştiriliyor; 500 üstü follower'da da tüm kullanıcılara bildirim gidiyor.
+- **Değişen dosyalar:** `src/lib/notifications.ts`
+- **Neden:** TASKS.md Backlog / TASK-034 — `limit: Math.min(..., 500)` ile 500 üstü follower sessizce atlanıyordu
+- **Test durumu:** `npx tsc --noEmit` geçti, `npm run lint` temiz
+
+### TASK-035 — PlayLog IP "unknown" rate-limit devre dışıydı + CF header eksikti
+- **Ne yapıldı:** `src/app/api/sets/[id]/play/route.ts` güncellendi. IP çözümlemesi: `cf-connecting-ip` → `x-forwarded-for` → `x-real-ip` → `"unknown"` öncelik sırasıyla. IP `"unknown"` ise PlayLog yazılmıyor ama `playsCount` yine de artırılıyor (tüm anonim isteklerin aynı rate-limit bucket'ına düşmesini önler).
+- **Değişen dosyalar:** `src/app/api/sets/[id]/play/route.ts`
+- **Neden:** TASKS.md Backlog / TASK-035 — "unknown" IP tüm anonim istekleri tek bucket'a sokuyordu, rate limit etkisizdi
+- **Test durumu:** `npx tsc --noEmit` geçti, `npm run lint` temiz
+
+### TASK-038 — Set sahibi kendi setindeki yorumları moderasyon yapabiliyor
+- **Ne yapıldı:** `src/app/api/sets/[id]/comments/[commentId]/route.ts` DELETE endpoint'i: yorum sahibi kontrolünün yanına set sahibi kontrolü eklendi (`comment.userId !== userId` ise `set.userId === userId` de kontrol ediliyor). `src/components/set/Comments.tsx`'e `isOwner?: boolean` prop eklendi; silme butonu `isOwn || isOwner` koşulunda gösteriliyor. `src/app/(main)/sets/[id]/page.tsx`: `<Comments setId={set.id} isOwner={userId === set.userId} />` ile prop aktarıldı.
+- **Değişen dosyalar:** `src/app/api/sets/[id]/comments/[commentId]/route.ts`, `src/components/set/Comments.tsx`, `src/app/(main)/sets/[id]/page.tsx`
+- **Neden:** TASKS.md Backlog / TASK-038 — set sahibi spam/uygunsuz yorumları kaldıramıyordu
+- **Test durumu:** `npx tsc --noEmit` geçti, `npm run lint` temiz
+
+### TASK-039 — Email template HTML escaping eklendi
+- **Ne yapıldı:** `src/lib/email.ts`'e `escapeHtml(s: string)` yardımcı fonksiyon eklendi (`&`, `<`, `>`, `"` karakterlerini entity'lere çeviriyor). `baseTemplate` içinde `<title>` etiketi, `sendFollowNotification` içinde `followerName` ve `toName`, `sendNewSetNotification` içinde `artistName`, `setTitle`, `toName`, `coverUrl` (alt + src) ve tüm href URL'leri `escapeHtml()` ile sarıldı.
+- **Değişen dosyalar:** `src/lib/email.ts`
+- **Neden:** TASKS.md Backlog / TASK-039 — kullanıcı kaynaklı string'ler HTML template'e doğrudan interpolate ediliyordu; email client XSS riski
+- **Test durumu:** `npx tsc --noEmit` geçti, `npm run lint` temiz
+
+### TASK-037 — Auth abstraction pilot: 5 API route'u `getCurrentUserId` kullanıyor
+- **Ne yapıldı:** 5 API route'unda `import { auth } from "@clerk/nextjs/server"` → `import { getCurrentUserId } from "@/lib/auth"` olarak değiştirildi; `const { userId } = await auth()` → `const userId = await getCurrentUserId()` olarak güncellendi. Follow route'unda `clerkClient` import'u ayrı tutuldu (farklı amaçla kullanılıyor). Geçiş yapılan route'lar: `sets/[id]/comments/[commentId]/route.ts`, `sets/[id]/comments/route.ts`, `sets/[id]/like/route.ts`, `sets/[id]/route.ts`, `users/[username]/follow/route.ts`.
+- **Değişen dosyalar:** `src/app/api/sets/[id]/comments/[commentId]/route.ts`, `src/app/api/sets/[id]/comments/route.ts`, `src/app/api/sets/[id]/like/route.ts`, `src/app/api/sets/[id]/route.ts`, `src/app/api/users/[username]/follow/route.ts`
+- **Neden:** TASKS.md Backlog / TASK-037 — Clerk bağımlılığının tek noktadan yönetilebilmesi için pilot geçiş
+- **Test durumu:** `npx tsc --noEmit` geçti, `npm run lint` temiz
+
+### TASK-022 — Marka adı tutarsızlığı: APP_NAME sabiti eklendi
+- **Ne yapıldı:** `src/lib/constants.ts`'e `export const APP_NAME = "SensSetify"` eklendi. `src/app/layout.tsx`: WEBSITE_SCHEMA `name`, metadata `title.default`, `title.template`, `openGraph.title`, `openGraph.siteName`, `openGraph.images[0].alt`, `twitter.title` alanları `APP_NAME` kullanıyor. `src/lib/email.ts`: `FROM` default ve `baseTemplate` header'ı `APP_NAME` kullanıyor.
+- **Değişen dosyalar:** `src/lib/constants.ts`, `src/app/layout.tsx`, `src/lib/email.ts`
+- **Neden:** TASKS.md Backlog / TASK-022 — "Senssetify", "SensSetify", "Journey" karışık kullanılıyordu; canonical form "SensSetify"
+- **Test durumu:** `npx tsc --noEmit` geçti, `npm run lint` temiz
+
 ## [2026-06-29] - Sprint 3: TASK-030, TASK-031, TASK-032, TASK-033, TASK-008
 
 ### TASK-030 — PlayLog FK kısıtı eklendi

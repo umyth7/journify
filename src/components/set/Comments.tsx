@@ -25,7 +25,18 @@ function timeAgo(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("tr-TR");
 }
 
-export function Comments({ setId }: { setId: string }) {
+/**
+ * TASK-038: `isOwner` — pass `true` when the current user is the set owner.
+ * The set owner sees a delete button on every comment for moderation purposes.
+ * The comment author always sees a delete button on their own comment.
+ */
+export function Comments({
+  setId,
+  isOwner = false,
+}: {
+  setId: string;
+  isOwner?: boolean;
+}) {
   const { user, isLoaded } = useUser();
   const [comments, setComments] = useState<Comment[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -124,7 +135,8 @@ export function Comments({ setId }: { setId: string }) {
                   </div>
                   <p className="text-sm text-zinc-400 leading-relaxed [overflow-wrap:anywhere]">{c.body}</p>
                 </div>
-                {isOwn && (
+                {/* Show delete for comment author OR set owner (TASK-038) */}
+                {(isOwn || isOwner) && (
                   <button
                     onClick={() => handleDelete(c.id)}
                     disabled={deletingId === c.id}

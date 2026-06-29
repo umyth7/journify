@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { db } from "@/lib/db";
 import { r2, R2_BUCKET } from "@/lib/r2";
@@ -12,7 +12,7 @@ function urlToKey(url: string): string {
 }
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const set = await db.set.findUnique({ where: { id: params.id }, select: { userId: true } });
@@ -42,7 +42,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const { userId } = await auth();
+  const userId = await getCurrentUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const set = await db.set.findUnique({
