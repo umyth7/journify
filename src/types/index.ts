@@ -6,7 +6,8 @@ export type Mood =
   | "DARK"
   | "MELANCHOLIC"
   | "RAW"
-  | "COSMIC";
+  | "COSMIC"
+  | "COFFEE";
 
 export interface Set {
   id: string;

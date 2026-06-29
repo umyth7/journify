@@ -64,6 +64,7 @@ enum Mood {
   MELANCHOLIC
   RAW
   COSMIC
+  COFFEE
 }
 
 model Like {
@@ -122,4 +123,13 @@ model EmailNotificationLog {
   sentAt    DateTime @default(now())
 
   @@index([toUserId, type])
+}
+
+model PlayLog {
+  id        String   @id @default(cuid())
+  setId     String
+  ip        String
+  createdAt DateTime @default(now())
+
+  @@index([setId, ip, createdAt])
 }

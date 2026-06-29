@@ -6,13 +6,12 @@ import { Clock, Music2, Headphones } from "lucide-react";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { formatDuration } from "@/lib/utils";
+import { BASE_URL } from "@/lib/constants";
 import { PlayButton } from "@/components/set/PlayButton";
 import { LikeButton } from "@/components/set/LikeButton";
 import { EmojiReactions } from "@/components/set/EmojiReactions";
 import { FollowButton } from "@/components/profile/FollowButton";
 import { Comments } from "@/components/set/Comments";
-
-const BASE_URL = "https://www.senssetify.com";
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const set = await db.set.findUnique({

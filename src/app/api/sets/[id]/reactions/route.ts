@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 
 const ALLOWED_EMOJIS = ["🔥", "❤️", "🌀", "✨", "🌍", "🌊"];
 
@@ -41,14 +42,26 @@ export async function POST(
     return NextResponse.json({ error: "Invalid emoji" }, { status: 400 });
   }
 
-  const existing = await db.reaction.findUnique({
-    where: { userId_setId_emoji: { userId, setId: params.id, emoji } },
-  });
+  // TASK-005: Validate set exists before touching reactions
+  const set = await db.set.findUnique({ where: { id: params.id }, select: { id: true } });
+  if (!set) return NextResponse.json({ error: "Set not found" }, { status: 404 });
 
-  if (existing) {
-    await db.reaction.delete({ where: { userId_setId_emoji: { userId, setId: params.id, emoji } } });
-  } else {
+  // TASK-002: Optimistic create — catch P2002 and delete instead
+  // Avoids TOCTOU race where two concurrent requests both read "not reacted" and both try to create
+  try {
     await db.reaction.create({ data: { userId, setId: params.id, emoji } });
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      // Already reacted — delete (toggle off)
+      await db.reaction.delete({
+        where: { userId_setId_emoji: { userId, setId: params.id, emoji } },
+      });
+    } else {
+      throw err;
+    }
   }
 
   const rows = await db.reaction.groupBy({

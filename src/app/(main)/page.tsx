@@ -21,6 +21,7 @@ type MoodTheme = {
 
 const MOOD_THEMES: Record<Exclude<MoodId, null> | "default", MoodTheme> = {
   default:    { glowColor: "#6d28d9", textColor: "#a78bfa", labelColor: "#a78bfa", accentBg: "rgba(109,40,217,0.12)", bgTint: "rgba(109,40,217,0.00)" },
+  COFFEE:     { glowColor: "#92400e", textColor: "#fde68a", labelColor: "#d97706", accentBg: "rgba(146,64,14,0.18)",  bgTint: "rgba(146,64,14,0.08)"  },
   HYPNOTIC:   { glowColor: "#7c3aed", textColor: "#c4b5fd", labelColor: "#a78bfa", accentBg: "rgba(124,58,237,0.15)", bgTint: "rgba(124,58,237,0.08)" },
   EUPHORIC:   { glowColor: "#f59e0b", textColor: "#fde68a", labelColor: "#fbbf24", accentBg: "rgba(245,158,11,0.12)", bgTint: "rgba(245,158,11,0.07)" },
   TRIBAL:     { glowColor: "#ea580c", textColor: "#fed7aa", labelColor: "#fb923c", accentBg: "rgba(234,88,12,0.12)",  bgTint: "rgba(234,88,12,0.07)"  },

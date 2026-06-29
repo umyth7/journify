@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth, currentUser, clerkClient } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import {
   CreateMultipartUploadCommand,
   UploadPartCommand,
@@ -9,7 +9,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { r2, R2_BUCKET } from "@/lib/r2";
 import { db } from "@/lib/db";
-import { sendNewSetNotification } from "@/lib/email";
+import { notifyFollowersOfNewSet } from "@/lib/notifications";
 
 const PART_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
@@ -144,7 +144,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Title, description and genre are required." }, { status: 400 });
     }
 
-    const VALID_MOODS = ["HYPNOTIC","EUPHORIC","TRIBAL","FLOATING","DARK","MELANCHOLIC","RAW","COSMIC"];
+    const VALID_MOODS = ["HYPNOTIC","EUPHORIC","TRIBAL","FLOATING","DARK","MELANCHOLIC","RAW","COSMIC","COFFEE"];
     const workerUrl = process.env.TRANSCODING_WORKER_URL;
 
     const set = await db.set.create({
@@ -189,12 +189,12 @@ export async function POST(req: Request) {
     } else {
       // No worker configured — mark ready immediately so set is playable
       await db.set.update({ where: { id: set.id }, data: { status: "READY" } });
-      // Notify followers immediately since set is ready now
+      // Notify followers immediately since set is ready now (batched Clerk API)
       notifyFollowersOfNewSet({
-        id: set.id,
-        title,
+        setId: set.id,
+        setTitle: title,
         coverUrl: metadata.coverUrl ?? null,
-        userId,
+        artistId: userId,
         artistName: clerkUser?.username ?? userId,
         artistUsername: clerkUser?.username ?? userId,
       }).catch((err) => console.error("[multipart] notification error:", err));
@@ -213,58 +213,3 @@ export async function POST(req: Request) {
   return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 }
 
-async function notifyFollowersOfNewSet({
-  id,
-  title,
-  coverUrl,
-  userId,
-  artistName,
-  artistUsername,
-}: {
-  id: string;
-  title: string;
-  coverUrl: string | null;
-  userId: string;
-  artistName: string;
-  artistUsername: string;
-}) {
-  const follows = await db.follow.findMany({
-    where: { followingId: userId },
-    select: { followerId: true },
-  });
-  if (follows.length === 0) return;
-
-  const BATCH = 10;
-  for (let i = 0; i < follows.length; i += BATCH) {
-    const batch = follows.slice(i, i + BATCH);
-    await Promise.all(
-      batch.map(async ({ followerId }) => {
-        try {
-          const recentLog = await db.emailNotificationLog.findFirst({
-            where: { type: "new_set", toUserId: followerId, setId: id },
-          });
-          if (recentLog) return;
-
-          const clerkUserFollower = await (await clerkClient()).users.getUser(followerId);
-          const toEmail = clerkUserFollower.emailAddresses?.[0]?.emailAddress;
-          if (!toEmail) return;
-
-          const toDbUser = await db.user.findUnique({
-            where: { id: followerId },
-            select: { displayName: true, username: true },
-          });
-          const toName = toDbUser?.displayName ?? toDbUser?.username ?? "there";
-
-          await Promise.all([
-            sendNewSetNotification({ toEmail, toName, artistName, artistUsername, setTitle: title, setId: id, coverUrl }),
-            db.emailNotificationLog.create({
-              data: { type: "new_set", toUserId: followerId, fromUserId: userId, setId: id },
-            }),
-          ]);
-        } catch (err) {
-          console.error(`[multipart notify] follower ${followerId}:`, err);
-        }
-      })
-    );
-  }
-}

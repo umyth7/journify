@@ -6,6 +6,7 @@ import { Pencil, Trash2, Headphones, Heart, X, Check, AlertTriangle } from "luci
 import type { Mood } from "@/types";
 
 const MOODS: { value: Mood; label: string; emoji: string }[] = [
+  { value: "COFFEE", label: "Coffee", emoji: "☕" },
   { value: "HYPNOTIC", label: "Hypnotic", emoji: "🌀" },
   { value: "EUPHORIC", label: "Euphoric", emoji: "✨" },
   { value: "TRIBAL", label: "Tribal", emoji: "🌍" },

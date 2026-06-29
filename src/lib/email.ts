@@ -8,8 +8,9 @@
  * app works without email configuration during development.
  */
 
+import { BASE_URL } from "@/lib/constants";
+
 const FROM = process.env.EMAIL_FROM ?? "Senssetify <noreply@senssetify.com>";
-const BASE_URL = "https://www.senssetify.com";
 
 type SendResult = { ok: true } | { ok: false; error: string };
 
