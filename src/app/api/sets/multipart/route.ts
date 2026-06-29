@@ -122,7 +122,7 @@ export async function POST(req: Request) {
       })
     );
 
-    const audioUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
+    const audioUrl = `/api/audio/${key}`;
 
     // Ensure user exists in DB (webhook may not have fired yet)
     // Always upsert — currentUser() can be null if Clerk API is slow, but userId is always valid
